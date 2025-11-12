@@ -1,1 +1,4 @@
 swama/userPreferences.*
+swama/Data/*
+swama/Project/DerivedData/formAttributes.json
+swama/Project/DerivedData/methodAttributes.json
