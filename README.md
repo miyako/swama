@@ -1,0 +1,2 @@
+# swama
+Local inference engine
