@@ -5,3 +5,18 @@
 
 # swama
 Local inference engine [`swama`](https://github.com/Trans-N-ai/swama)
+
+## build
+
+* Swama/CLI/Run.swift
+
+`Task.detached` causes compilation error
+
+```swift
+@MainActor // add
+func startAnimation() {
+  animationDisplayTask = Task/*.detached*/ {
+  ...
+  }
+}
+```
