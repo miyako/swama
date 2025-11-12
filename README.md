@@ -5,3 +5,31 @@
 
 # swama
 Local inference engine [`swama`](https://github.com/Trans-N-ai/swama)
+
+## Usage
+
+* list
+
+```4d
+var $swama : cs.swama.swama
+$swama:=cs.swama.swama.new()
+
+var $models : Collection
+$models:=$swama.list()
+
+```
+
+## Build Remarks
+
+* Swama/CLI/Run.swift
+
+`Task.detached` causes compilation error
+
+```swift
+@MainActor // add
+func startAnimation() {
+  animationDisplayTask = Task/*.detached*/ {
+  ...
+  }
+}
+```
