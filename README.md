@@ -4,7 +4,9 @@
 ![downloads](https://img.shields.io/github/downloads/miyako/swama/total)
 
 # swama
-Local inference engine [`swama`](https://github.com/Trans-N-ai/swama)
+Local inference engine
+
+**aknowledgements**: [Trans-N-ai/swama](https://github.com/Trans-N-ai/swama)
 
 ## Usage
 
