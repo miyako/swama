@@ -30,15 +30,18 @@ Else
     /*
         Function onError($params : Object; $error : cs.event.error)
         Function onSuccess($params : Object; $models : cs.event.models)
+        Function onData($worker : 4D.SystemWorker; $params : Object)
         Function onTerminate($worker : 4D.SystemWorker; $params : Object)
     */
     
     $event.onError:=Formula(ALERT($2.message))
     $event.onSuccess:=Formula(ALERT($2.models.extract("name").join(",")+" loaded!"))
+    $event.onData:=Formula(MESSAGE([$2.fileName; "["; $2.count; "/"; $2.total; "]"; $2.percentage; "%"].join(" ")))
     $event.onTerminate:=Formula(LOG EVENT(Into 4D debug message; (["process"; $1.pid; "terminated!"].join(" "))))
     
     $port:=8080
     $models:=["mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ"; "gemma3"]
+    $models:=["mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ"]
     
     $swama:=cs.swama.swama.new($port; $models; {host: "127.0.0.1"}; $event)
     

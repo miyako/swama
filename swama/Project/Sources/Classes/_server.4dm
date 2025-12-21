@@ -89,11 +89,13 @@ Function list() : Collection
 	
 	return $models
 	
-Function install($option : Variant; $formula : 4D:C1709.Function) : Collection
+Function install($params : Object; $option : Variant; $formula : 4D:C1709.Function) : Collection
 	
-	If (Is Windows:C1573) || (System info:C1571.macRosetta)
+	If (Is Windows:C1573) || (System info:C1571.processor#"@Apple@")
 		return 
 	End if 
+	
+	This:C1470.bind($params; ["onSuccess"; "onData"])
 	
 	var $stdOut; $isStream; $isAsync : Boolean
 	var $options : Collection
@@ -136,7 +138,7 @@ Function install($option : Variant; $formula : 4D:C1709.Function) : Collection
 		End if 
 		
 		var $worker : 4D:C1709.SystemWorker
-		$worker:=This:C1470.controller.execute($command; Null:C1517; $option.data).worker
+		$worker:=This:C1470.controller.execute($command; Null:C1517; $option.model).worker
 		
 		If (Not:C34($isAsync))
 			$worker.wait()
