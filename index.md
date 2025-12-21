@@ -11,7 +11,7 @@ layout: default
 
 #### Abstract
 
-[Swama](https://github.com/Trans-N-ai/swama) is high-performance MLX-based LLM inference engine designed specifically for macOS.
+[Swama](https://github.com/Trans-N-ai/swama) is a high-performance MLX-based LLM inference engine designed specifically for macOS.
 
 #### Usage
 
