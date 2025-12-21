@@ -8,64 +8,6 @@ Local inference engine
 
 **aknowledgements**: [Trans-N-ai/swama](https://github.com/Trans-N-ai/swama)
 
-## Usage
-
-* List models
-
-```4d
-var $swama : cs.swama.swama
-$swama:=cs.swama.swama.new()
-
-var $models : Collection
-$models:=$swama.list()
-
-```
-
-* Install model
-
-```4d
-If (Count parameters=0)
-	
-	CALL WORKER(1; Current method name; {})
-	
-Else 
-	
-	var $swama : cs.swama.swama
-	$swama:=cs.swama.swama.new()
-	
-	var $models : Collection
-	$swama.install({model: "gemma3"}; Formula(onInstall))
-	
-End if 
-```
-
-* Uninstall model
-
-```4d
-If (Count parameters=0)
-	
-	CALL WORKER(1; Current method name; {})
-	
-Else 
-	
-	var $swama : cs.swama.swama
-	$swama:=cs.swama.swama.new()
-	
-	var $models : Collection
-	$swama.uninstall({model: "gemma3"}; Formula(onUninstall))
-	
-End if 
-```
-
-* Serve model
-
-```4d
-var $swama : cs.swama.server
-$swama:=cs.swama.server.new()
-$isRunning:=$swama.isRunning()
-$swama.start({host: "127.0.0.1"; port: 8080})
-```
-
 ## Build Remarks
 
 * Swama/CLI/Run.swift
