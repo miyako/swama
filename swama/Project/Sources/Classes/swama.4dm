@@ -1,178 +1,56 @@
-Class extends _swama
+property options : Object
 
-Class constructor($controller : 4D:C1709.Class)
+Class constructor($port : Integer; $models : Collection; $options : Object; $event : cs:C1710.event.event)
 	
-	Super:C1705($controller)
+	This:C1470.options:=$options#Null:C1517 ? $options : {}
+	This:C1470.options.port:=$port
+	This:C1470.options.models:=$models
 	
-Function list() : Collection
+	var $swama : cs:C1710.workers.worker
+	$swama:=cs:C1710.workers.worker.new(cs:C1710._server)
 	
-	If (Is Windows:C1573) || (Get system info:C1571.macRosetta)
-		return 
-	End if 
-	
-	var $models : Collection
-	$models:=[]
-	
-	var $command : Text
-	$command:=This:C1470.escape(This:C1470.executablePath)
-	$command+=" list "
-	
-	var $worker : 4D:C1709.SystemWorker
-	$worker:=This:C1470.controller.execute($command).worker
-	$worker.wait()
-	
-	var $resultText : Text
-	$resultText:=This:C1470.controller.stdOut
-	
-	ARRAY LONGINT:C221($pos; 0)
-	ARRAY LONGINT:C221($len; 0)
-	
-	var $i : Integer
-	$i:=1
-	
-	While (Match regex:C1019("(?m)^(\\S+)"; $resultText; $i; $pos; $len))
-		$models.push(Substring:C12($resultText; $pos{1}; $len{1}))
-		$i:=$pos{0}+$len{0}
-	End while 
-	
-	If ($models.length#0)
-		$models.shift()
-	End if 
-	
-	return $models
-	
-Function install($option : Variant; $formula : 4D:C1709.Function) : Collection
-	
-	If (Is Windows:C1573) || (Get system info:C1571.macRosetta)
-		return 
-	End if 
-	
-	var $stdOut; $isStream; $isAsync : Boolean
-	var $options : Collection
-	var $results : Collection
-	$results:=[]
-	
-	Case of 
-		: (Value type:C1509($option)=Is object:K8:27)
-			$options:=[$option]
-		: (Value type:C1509($option)=Is collection:K8:32)
-			$options:=$option
-		Else 
-			$options:=[]
-	End case 
-	
-	var $commands : Collection
-	$commands:=[]
-	
-	If (OB Instance of:C1731($formula; 4D:C1709.Function))
-		$isAsync:=True:C214
-		This:C1470.controller.onResponse:=$formula
-	End if 
-	
-	For each ($option; $options)
+	If (Not:C34($swama.isRunning($port)))
 		
-		If ($option=Null:C1517) || (Value type:C1509($option)#Is object:K8:27)
-			continue
+		If ($model="")
+			$model:="llama3.2"
 		End if 
 		
-		$stdOut:=Not:C34(OB Instance of:C1731($option.output; 4D:C1709.File))
-		
-		$command:=This:C1470.escape(This:C1470.executablePath)
-		$command+=" pull "
-		
-		If (Value type:C1509($option.model)=Is text:K8:3) && ($option.model#"")
-			$command+=" "
-			$command+=This:C1470.escape($option.model)
-		Else 
-			continue  //mandatory
+		If ($port=0) || ($port<0) || ($port>65535)
+			$port:=8080
 		End if 
 		
-		var $worker : 4D:C1709.SystemWorker
-		$worker:=This:C1470.controller.execute($command; Null:C1517; $option.data).worker
+		This:C1470.main($port; $models; $options; $event)
 		
-		If (Not:C34($isAsync))
-			$worker.wait()
-		End if 
-		
-		If ($stdOut) && (Not:C34($isAsync))
-			//%W-550.26
-			//%W-550.2
-			$results.push(This:C1470.controller.stdOut)
-			This:C1470.controller.clear()
-			//%W+550.2
-			//%W+550.26
-		End if 
-		
-	End for each 
-	
-	If ($stdOut) && (Not:C34($isAsync))
-		return $results
 	End if 
 	
-Function uninstall($option : Variant; $formula : 4D:C1709.Function) : Collection
+Function onTCP($status : Object; $options : Object)
 	
-	If (Is Windows:C1573) || (Get system info:C1571.macRosetta)
-		return 
+	If ($status.success)
+		
+		var $className : Text
+		$className:=Split string:C1554(Current method name:C684; "."; sk trim spaces:K86:2).first()
+		
+		CALL WORKER:C1389($className; Formula:C1597(start); $options)
+		
+	Else 
+		
+		var $statuses : Text
+		$statuses:="TCP port "+String:C10($status.port)+" is aready used by process "+$status.PID.join(",")
+		var $error : cs:C1710.event.error
+		$error:=cs:C1710.event.error.new(1; $statuses)
+		
+		If ($options.event#Null:C1517) && (OB Instance of:C1731($options.event; cs:C1710.event.event))
+			$options.event.onError.call(This:C1470; $options; $error)
+		End if 
+		
 	End if 
 	
-	var $stdOut; $isStream; $isAsync : Boolean
-	var $options : Collection
-	var $results : Collection
-	$results:=[]
+Function main($port : Integer; $models : Collection; $options : Object; $event : cs:C1710.event.event)
 	
-	Case of 
-		: (Value type:C1509($option)=Is object:K8:27)
-			$options:=[$option]
-		: (Value type:C1509($option)=Is collection:K8:32)
-			$options:=$option
-		Else 
-			$options:=[]
-	End case 
+	main({port: $port; models: $models; options: $options; event: $event}; This:C1470.onTCP)
 	
-	var $commands : Collection
-	$commands:=[]
+Function terminate()
 	
-	If (OB Instance of:C1731($formula; 4D:C1709.Function))
-		$isAsync:=True:C214
-		This:C1470.controller.onResponse:=$formula
-	End if 
-	
-	For each ($option; $options)
-		
-		If ($option=Null:C1517) || (Value type:C1509($option)#Is object:K8:27)
-			continue
-		End if 
-		
-		$stdOut:=Not:C34(OB Instance of:C1731($option.output; 4D:C1709.File))
-		
-		$command:=This:C1470.escape(This:C1470.executablePath)
-		$command+=" rm "
-		
-		If (Value type:C1509($option.model)=Is text:K8:3) && ($option.model#"")
-			$command+=" "
-			$command+=This:C1470.escape($option.model)
-		Else 
-			continue  //mandatory
-		End if 
-		
-		var $worker : 4D:C1709.SystemWorker
-		$worker:=This:C1470.controller.execute($command; Null:C1517; $option.data).worker
-		
-		If (Not:C34($isAsync))
-			$worker.wait()
-		End if 
-		
-		If ($stdOut) && (Not:C34($isAsync))
-			//%W-550.26
-			//%W-550.2
-			$results.push(This:C1470.controller.stdOut)
-			This:C1470.controller.clear()
-			//%W+550.2
-			//%W+550.26
-		End if 
-		
-	End for each 
-	
-	If ($stdOut) && (Not:C34($isAsync))
-		return $results
-	End if 
+	var $swama : cs:C1710.workers.worker
+	$swama:=cs:C1710.workers.worker.new(cs:C1710._server)
+	$swama.terminate()
