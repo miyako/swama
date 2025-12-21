@@ -3,7 +3,6 @@ property options : Object
 Class constructor($port : Integer; $models : Collection; $options : Object; $event : cs:C1710.event.event)
 	
 	This:C1470.options:=$options#Null:C1517 ? $options : {}
-	This:C1470.options.port:=$port
 	This:C1470.options.models:=$models
 	
 	var $swama : cs:C1710.workers.worker
@@ -18,6 +17,8 @@ Class constructor($port : Integer; $models : Collection; $options : Object; $eve
 		If ($port=0) || ($port<0) || ($port>65535)
 			$port:=8080
 		End if 
+		
+		This:C1470.options.port:=$port
 		
 		This:C1470.main($port; $models; $options; $event)
 		
