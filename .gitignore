@@ -1,4 +1,6 @@
 swama/userPreferences.*
 swama/Data/*
-swama/Project/DerivedData/formAttributes.json
-swama/Project/DerivedData/methodAttributes.json
+swama/Project/DerivedData/*
+swama/Resources/en.lproj/syntaxEN.json
+swama/Project/Sources/Methods/serve.4dm
+swama/Libraries/lib4d-arm64.dylib

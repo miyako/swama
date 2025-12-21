@@ -15,28 +15,32 @@ layout: default
 
 #### Usage
 
-Instantiate `cs.swama.server` and call `.start()` in your *On Startup* database method:
+Instantiate `cs.swama.swama` in your *On Startup* database method:
 
 ```4d
-var $swama : cs.swama.server
-$swama:=cs.swama.server.new()
-$swama.start({host: "127.0.0.1"; port: 8080})
-```
+var $swama : cs.swama
 
-Instantiate `cs.swama.swama` and call `.install()` to install a model:
-
-```4d
-If (Count parameters=0)
-    
-    CALL WORKER(1; Current method name; {})
-    
+If (False)
+    $swama:=cs.swama.new()  //default
 Else 
+    var $port : Integer
     
-    var $swama : cs.swama
-    $swama:=cs.swama.new()
+    var $event : cs.event.event
+    $event:=cs.event.event.new()
+    /*
+        Function onError($params : Object; $error : cs.event.error)
+        Function onSuccess($params : Object; $models : cs.event.models)
+        Function onTerminate($worker : 4D.SystemWorker; $params : Object)
+    */
     
-    var $models : Collection
-    $swama.install({model: "gemma3"}; Formula(onInstall))
+    $event.onError:=Formula(ALERT($2.message))
+    $event.onSuccess:=Formula(ALERT($2.models.extract("name").join(",")+" loaded!"))
+    $event.onTerminate:=Formula(LOG EVENT(Into 4D debug message; (["process"; $1.pid; "terminated!"].join(" "))))
+    
+    $port:=8080
+    $models:=["gemma3"; "llama3.2"]
+    
+    $swama:=cs.swama.new($port; $models; {host: "127.0.0.1"}; $event)
     
 End if 
 ```
@@ -66,8 +70,8 @@ $responseEmbeddings:=$AIClient.embeddings.create($text)
 Finally to terminate the server:
 
 ```4d
-var $swama : cs.swama.server
-$swama:=cs.swama.server.new()
+var $swama : cs.swama.swama
+$swama:=cs.swama.swama.new()
 $swama.terminate()
 ```
 
