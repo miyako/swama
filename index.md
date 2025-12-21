@@ -40,7 +40,7 @@ Else
     $event.onTerminate:=Formula(LOG EVENT(Into 4D debug message; (["process"; $1.pid; "terminated!"].join(" "))))
     
     $port:=8080
-    $models:=["mlx-community/embeddinggemma-300m-8bit"; "gemma3"]
+    $models:=["mlx-community/Qwen3-Embedding-0.6B-8bit"; "gemma3"]
     
     $swama:=cs.swama.swama.new($port; $models; {host: "127.0.0.1"}; $event)
     
@@ -54,7 +54,7 @@ curl -X POST http://localhost:8080/v1/embeddings \
   -H "Content-Type: application/json" \
   -d '{
     "input": ["Hello world", "Text embeddings"],
-    "model": "mlx-community/embeddinggemma-300m-8bit"
+    "model": "mlx-community/Qwen3-Embedding-0.6B-8bit"
   }'
 ```  
 

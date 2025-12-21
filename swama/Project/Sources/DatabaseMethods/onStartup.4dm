@@ -20,7 +20,7 @@ Function onTerminate($worker : 4D.SystemWorker; $params : Object)
 	$event.onTerminate:=Formula:C1597(LOG EVENT:C667(Into 4D debug message:K38:5; (["process"; $1.pid; "terminated!"].join(" "))))
 	
 	$port:=8080
-	$models:=["mlx-community/embeddinggemma-300m-8bit"; "gemma3"]
+	$models:=["mlx-community/Qwen3-Embedding-0.6B-8bit"; "gemma3"]
 	
 	$swama:=cs:C1710.swama.new($port; $models; {host: "127.0.0.1"}; $event)
 	
