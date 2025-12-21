@@ -18,10 +18,10 @@ layout: default
 Instantiate `cs.swama.swama` in your *On Startup* database method:
 
 ```4d
-var $swama : cs.swama
+var $swama : cs.swama.swama
 
 If (False)
-    $swama:=cs.swama.new()  //default
+    $swama:=cs.swama.swama.new()  //default
 Else 
     var $port : Integer
     
@@ -38,9 +38,9 @@ Else
     $event.onTerminate:=Formula(LOG EVENT(Into 4D debug message; (["process"; $1.pid; "terminated!"].join(" "))))
     
     $port:=8080
-    $models:=["gemma3"; "llama3.2"]
+    $models:=["mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ"; "gemma3"]
     
-    $swama:=cs.swama.new($port; $models; {host: "127.0.0.1"}; $event)
+    $swama:=cs.swama.swama.new($port; $models; {host: "127.0.0.1"}; $event)
     
 End if 
 ```
@@ -48,9 +48,26 @@ End if
 Now you can test the server:
 
 ```
-curl -X POST http://127.0.0.1:8080/v1/embeddings \
-     -H "Content-Type: application/json" \
-     -d '{"input":"The quick brown fox jumps over the lazy dog."}'
+curl -X POST http://localhost:8080/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": ["Hello world", "Text embeddings"],
+    "model": "mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ"
+  }'
+```  
+
+```
+curl -X POST http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma3",
+    "messages": [
+      {"role": "user", "content": "Hello!"}
+    ],
+    "temperature": 0.7,
+    "max_tokens": 100,
+    "stream": true
+  }'
 ```
 
 Or, use AI Kit:
