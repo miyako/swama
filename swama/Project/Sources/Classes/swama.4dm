@@ -3,21 +3,25 @@ property options : Object
 Class constructor($port : Integer; $models : Collection; $options : Object; $event : cs:C1710.event.event)
 	
 	This:C1470.options:=$options#Null:C1517 ? $options : {}
-	This:C1470.options.models:=$models
+	
+	If (Value type:C1509(This:C1470.options.host)#Is text:K8:3) || (This:C1470.options.host="")
+		This:C1470.options.host:="127.0.0.1"
+	End if 
 	
 	var $swama : cs:C1710.workers.worker
 	$swama:=cs:C1710.workers.worker.new(cs:C1710._server)
 	
 	If (Not:C34($swama.isRunning($port)))
 		
-		If ($model="")
-			$model:="llama3.2"
+		If ($models=Null:C1517) || ($models.length=0)
+			$models:=["mlx-community/Qwen3-Embedding-0.6B-8bit"; "gemma3"]
 		End if 
 		
 		If ($port=0) || ($port<0) || ($port>65535)
 			$port:=8080
 		End if 
 		
+		This:C1470.options.models:=$models
 		This:C1470.options.port:=$port
 		
 		This:C1470._main($port; $models; $options; $event)
