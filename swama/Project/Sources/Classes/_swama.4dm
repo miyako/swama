@@ -14,7 +14,7 @@ Class constructor($class : 4D:C1709.Class)
 	$controller:=cs:C1710._swama_Controller
 	
 	While ($superclass#Null:C1517)
-		If ($superclass=$controller)
+		If ($superclass.name=$controller.new)
 			$controller:=$class
 			break
 		End if 
