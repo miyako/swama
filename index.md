@@ -23,6 +23,10 @@ var $swama : cs.swama.swama
 If (False)
     $swama:=cs.swama.swama.new()  //default
 Else 
+    var $homeFolder : 4D.Folder
+    $homeFolder:=Folder(fk home folder).folder(".MLX")
+    var $file : 4D.File
+    var $URL : Text
     var $port : Integer
     
     var $event : cs.event.event
@@ -30,19 +34,32 @@ Else
     /*
         Function onError($params : Object; $error : cs.event.error)
         Function onSuccess($params : Object; $models : cs.event.models)
-        Function onData($worker : 4D.SystemWorker; $params : Object)
+        Function onData($request : 4D.HTTPRequest; $event : Object)
+        Function onResponse($request : 4D.HTTPRequest; $event : Object)
         Function onTerminate($worker : 4D.SystemWorker; $params : Object)
     */
     
     $event.onError:=Formula(ALERT($2.message))
     $event.onSuccess:=Formula(ALERT($2.models.extract("name").join(",")+" loaded!"))
-    $event.onData:=Formula(MESSAGE([$2.fileName; "["; $2.count; "/"; $2.total; "]"; $2.percentage; "%"].join(" ")))
+    $event.onData:=Formula(LOG EVENT(Into 4D debug message; This.file.fullName+":"+String((This.range.end/This.range.length)*100; "###.00%")))
+    $event.onData:=Formula(MESSAGE(This.file.fullName+":"+String((This.range.end/This.range.length)*100; "###.00%")))
+    $event.onResponse:=Formula(LOG EVENT(Into 4D debug message; This.file.fullName+":download complete"))
+    $event.onResponse:=Formula(MESSAGE(This.file.fullName+":download complete"))
     $event.onTerminate:=Formula(LOG EVENT(Into 4D debug message; (["process"; $1.pid; "terminated!"].join(" "))))
     
-    $port:=8080
-    $models:=["mlx-community/Qwen3-Embedding-0.6B-8bit"; "gemma3"]
+    $port:=8085
     
-    $swama:=cs.swama.swama.new($port; $models; {host: "127.0.0.1"}; $event)
+    $options:={host: "127.0.0.1"}
+    var $huggingfaces : cs.event.huggingfaces
+    
+    $folder:=$homeFolder.folder("Qwen3-4B-Thinking-2507")
+    $path:="keisuke-miyako/Qwen3-4B-Thinking-2507-mlx-4bit"
+    $URL:="keisuke-miyako/Qwen3-4B-Thinking-2507-mlx-4bit"
+    
+    $chat:=cs.event.huggingface.new($folder; $URL; $path)
+    $huggingfaces:=cs.event.huggingfaces.new([$chat])
+    
+    $swama:=cs.swama.swama.new($port; $huggingfaces; $homeFolder; $options; $event)
     
 End if 
 ```
