@@ -22,3 +22,24 @@ func startAnimation() {
   }
 }
 ```
+
+### Convert Model
+
+```
+mlx_lm.convert \
+	--hf-path Qwen/Qwen3-4B-Instruct-2507   \
+	--mlx-path ~/Desktop/Qwen3-4B-Instruct-2507-4  \
+	--quantize \
+	--q-bits 4 \
+	--q-group-size 64
+```
+
+Remove from `config.json`
+
+```json
+{
+  "mode": "affine"
+}
+```
+
+Only f16 or 4bit is compatible with swama; not 8bit.
