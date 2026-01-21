@@ -43,3 +43,5 @@ Remove from `config.json`
 ```
 
 Only f16 or 4bit is compatible with swama; not 8bit.
+
+Tool calling does not seem to be supported.
