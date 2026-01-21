@@ -1,4 +1,5 @@
 property model : 4D:C1709.Folder
+property name : Text
 
 Class extends _models
 
@@ -33,6 +34,7 @@ Function onDownload($oid : Text)
 			 ? $downloaded.folder.folder($downloaded.path).parent : $downloaded.folder
 		
 		This:C1470.options.model:=$model
+		This:C1470.options.name:=$downloaded.name#"" ? $downloaded.name : $model.fullName
 	End if 
 	
 	Super:C1706.onDownload($oid)

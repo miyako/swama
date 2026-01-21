@@ -52,6 +52,7 @@ Class constructor($port : Integer; $huggingfaces : cs:C1710.event.huggingfaces; 
 		If ($request.response.status=Null:C1517)
 			This:C1470._models.push([$USER; $REPO].join("/"))
 			This:C1470.options.model:=$huggingface.folder
+			This:C1470.options.name:=$huggingface.name#"" ? $huggingface.name : $huggingface.folder.fullName
 			This:C1470.offline:=True:C214
 			continue
 		End if 

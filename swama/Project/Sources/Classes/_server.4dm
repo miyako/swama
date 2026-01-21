@@ -13,6 +13,13 @@ Function start($option : Object) : 4D:C1709.SystemWorker
 	This:C1470.bind($option; ["onTerminate"])
 	
 	var $command : Text
+	
+	$command:=This:C1470.escape(This:C1470.executablePath)
+	$command+=(" create "+This:C1470.escape(This:C1470.expand($option.model).path))
+	$command+=(" --name "+This:C1470.escape($option.name))
+	
+	This:C1470.controller.execute($command).worker.wait()
+	
 	$command:=This:C1470.escape(This:C1470.executablePath)
 	
 	If (Value type:C1509($option.port)=Is real:K8:4) && ($option.port>0)
@@ -29,7 +36,7 @@ Function start($option : Object) : 4D:C1709.SystemWorker
 	
 	For each ($arg; OB Entries:C1720($option))
 		Case of 
-			: (["host"; "port"; "model"; "help"; "version"].includes($arg.key))
+			: (["host"; "port"; "name"; "model"; "help"; "version"].includes($arg.key))
 				continue
 		End case 
 		$valueType:=Value type:C1509($arg.value)
@@ -42,7 +49,7 @@ Function start($option : Object) : 4D:C1709.SystemWorker
 			: ($valueType=Is boolean:K8:9) && ($arg.value)
 				$command+=(" --"+$key+" ")
 			: ($valueType=Is object:K8:27) && (OB Instance of:C1731($arg.value; 4D:C1709.File))
-				$command+=(" --"+$key+" "+This:C1470.escape(This:C1470.expand($option.model).path))
+				$command+=(" --"+$key+" "+This:C1470.escape(This:C1470.expand($arg.value).path))
 			Else 
 				//
 		End case 
