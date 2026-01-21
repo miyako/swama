@@ -28,7 +28,7 @@ func startAnimation() {
 ```
 mlx_lm.convert \
 	--hf-path Qwen/Qwen3-4B-Instruct-2507   \
-	--mlx-path ~/Desktop/Qwen3-4B-Instruct-2507-4  \
+	--mlx-path ~/Desktop/Qwen3-4B-Instruct-2507-4bit  \
 	--quantize \
 	--q-bits 4 \
 	--q-group-size 64
