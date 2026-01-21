@@ -50,7 +50,9 @@ Function start($option : Object) : 4D:C1709.SystemWorker
 	
 	//SET TEXT TO PASTEBOARD($command)
 	
-	return This:C1470.controller.execute($command; $isStream ? $option.model : Null:C1517; $option.data).worker
+	//ALERT($command)
+	
+	return This:C1470.controller.execute($command).worker
 	
 Function list() : Collection
 	

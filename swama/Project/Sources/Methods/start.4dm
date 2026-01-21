@@ -1,9 +1,9 @@
 //%attributes = {"invisible":true,"preemptive":"capable"}
-#DECLARE($options : Object)
+#DECLARE($options : Object; $formula : 4D:C1709.Function)
 
-var $swama : cs:C1710._server
-$swama:=cs:C1710._server.new(cs:C1710._Install_Controller)
+var $model : cs:C1710._Model
+$model:=cs:C1710._Model.new($options.port; $options.huggingfaces; $options.options; $formula; $options.event)
 
-$lines:=$swama.install($options.event; $options.models.map(Formula:C1597($1.result:={model: $1.value})); Formula:C1597(onModel))
-
-cs:C1710.workers.worker.new(cs:C1710._server).start($options.options.port; $options.options)
+If ($model.offline)
+	$model.start()
+End if 

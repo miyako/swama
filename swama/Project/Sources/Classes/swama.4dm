@@ -1,61 +1,35 @@
-property options : Object
+Class extends _interface
 
-Class constructor($port : Integer; $models : Collection; $options : Object; $event : cs:C1710.event.event)
+Class constructor($port : Integer; $huggingfaces : cs:C1710.event.huggingfaces; $HOME : 4D:C1709.Folder; $options : Object; $event : cs:C1710.event.event)
 	
-	This:C1470.options:=$options#Null:C1517 ? $options : {}
-	
-	If (Value type:C1509(This:C1470.options.host)#Is text:K8:3) || (This:C1470.options.host="")
-		This:C1470.options.host:="127.0.0.1"
-	End if 
+	Super:C1705()
 	
 	var $swama : cs:C1710.workers.worker
 	$swama:=cs:C1710.workers.worker.new(cs:C1710._server)
 	
 	If (Not:C34($swama.isRunning($port)))
 		
-		If ($models=Null:C1517) || ($models.length=0)
-			$models:=["mlx-community/Qwen3-Embedding-0.6B-8bit"; "gemma3"]
+		If (Not:C34(OB Instance of:C1731($HOME; 4D:C1709.Folder))) || (Not:C34($HOME.exists))
+			$HOME:=Folder:C1567(fk home folder:K87:24).folder(".MLX")
+		End if 
+		
+		If ($huggingfaces=Null:C1517) || (Not:C34(OB Instance of:C1731($huggingfaces; cs:C1710.event.huggingfaces))) || ($huggingfaces.huggingfaces.length=0)
+			$folder:=$HOME.folder("Qwen3-4B-Thinking-2507")
+			$path:="keisuke-miyako/Qwen3-4B-Thinking-2507-mlx-4bit"
+			$URL:="keisuke-miyako/Qwen3-4B-Thinking-2507-mlx-4bit"
+			$chat:=cs:C1710.event.huggingface.new($folder; $URL; $path)
+			$huggingfaces:=cs:C1710.event.huggingfaces.new([$chat])
+			$options:={host: "127.0.0.1"}
 		End if 
 		
 		If ($port=0) || ($port<0) || ($port>65535)
 			$port:=8080
 		End if 
 		
-		This:C1470.options.models:=$models
-		This:C1470.options.port:=$port
-		
-		This:C1470._main($port; $models; $options; $event)
+		This:C1470._main($port; $huggingfaces; $HOME; $options; $event)
 		
 	End if 
 	
-Function _onTCP($status : Object; $options : Object)
+Function _main($port : Integer; $huggingfaces : cs:C1710.event.huggingfaces; $HOME : 4D:C1709.Folder; $options : Object; $event : cs:C1710.event.event)
 	
-	If ($status.success)
-		
-		var $className : Text
-		$className:=Split string:C1554(Current method name:C684; "."; sk trim spaces:K86:2).first()
-		
-		CALL WORKER:C1389($className; Formula:C1597(start); $options)
-		
-	Else 
-		
-		var $statuses : Text
-		$statuses:="TCP port "+String:C10($status.port)+" is aready used by process "+$status.PID.join(",")
-		var $error : cs:C1710.event.error
-		$error:=cs:C1710.event.error.new(1; $statuses)
-		
-		If ($options.event#Null:C1517) && (OB Instance of:C1731($options.event; cs:C1710.event.event))
-			$options.event.onError.call(This:C1470; $options; $error)
-		End if 
-		
-	End if 
-	
-Function _main($port : Integer; $models : Collection; $options : Object; $event : cs:C1710.event.event)
-	
-	main({port: $port; models: $models; options: $options; event: $event}; This:C1470._onTCP)
-	
-Function terminate()
-	
-	var $swama : cs:C1710.workers.worker
-	$swama:=cs:C1710.workers.worker.new(cs:C1710._server)
-	$swama.terminate()
+	main({name: Split string:C1554(Current method name:C684; "."; sk trim spaces:K86:2).first(); port: $port; huggingfaces: $huggingfaces; HOME: $HOME; options: $options; event: $event}; This:C1470._onTCP)
