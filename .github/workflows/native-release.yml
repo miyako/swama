@@ -1,0 +1,72 @@
+name: Publish native CLI
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: 'Upstream tag, branch or SHA (empty = native/upstream.json pin)'
+        type: string
+        default: ''
+      publish_release:
+        description: 'Publish a native CLI release (main only; never latest)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swama-native-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/native-build.yml
+    with:
+      upstream_ref: ${{ inputs.upstream_ref }}
+
+  release:
+    if: inputs.publish_release && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: dist
+      - name: Verify and publish immutable native release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.release_tag }}
+          UPSTREAM_REVISION: ${{ needs.build.outputs.revision }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          cd dist
+          sha256sum --check ./*.sha256
+          python3 - <<'PY'
+          import glob
+          import json
+          import os
+          import tarfile
+          archives = glob.glob("*.tar.gz")
+          if len(archives) != 1:
+              raise RuntimeError("Expected exactly one native archive")
+          with tarfile.open(archives[0]) as archive:
+              manifests = [entry for entry in archive.getmembers() if entry.name.endswith("/BUILD_INFO.json")]
+              if len(manifests) != 1:
+                  raise RuntimeError("Expected exactly one build manifest")
+              info = json.load(archive.extractfile(manifests[0]))
+          if info["revision"] != os.environ["UPSTREAM_REVISION"]:
+              raise RuntimeError("Release source revision differs from packaged source")
+          expected_tag = f'native-v{info["version"]}-{info["revision"][:12]}'
+          if expected_tag != os.environ["RELEASE_TAG"]:
+              raise RuntimeError("Release tag differs from packaged version/revision")
+          PY
+          gh release create "$RELEASE_TAG" ./*.tar.gz ./*.sha256 \
+            --target "$TARGET_SHA" --latest=false \
+            --title "Swama native CLI $RELEASE_TAG" \
+            --notes "Built from Trans-N-ai/swama@$UPSTREAM_REVISION. Apple Silicon, macOS 15.4+. Includes SwiftPM resources, freshly compiled MLX Metal kernels, dependency licenses and build provenance. Ad-hoc signed only; not Developer ID signed or notarized. This is a standalone CLI, not a 4D component."

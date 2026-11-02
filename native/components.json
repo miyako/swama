@@ -1,0 +1,26 @@
+{
+  "event": {
+    "repository": "miyako/event",
+    "version": "20.0.19",
+    "revision": "4ab3162e8ac74e92aa34d78f83ac021809336b71",
+    "url": "https://github.com/miyako/event/releases/download/20.0.19/event.zip",
+    "sha256": "c2b05cc4b2aa304b2acc12efb434277f40d13275a4006f40f3a2a71c12e13baf",
+    "license_sha256": "955b8f8465c951d3e0745d0c738497d882037746470c68c3fe2a7a68d889d98a"
+  },
+  "workers": {
+    "repository": "miyako/workers",
+    "version": "20.0.19",
+    "revision": "d58fcbd64eb050fcba658bf576ba18f24c51fad4",
+    "url": "https://github.com/miyako/workers/releases/download/20.0.19/workers.zip",
+    "sha256": "10d1e22b8c89b4dda330d0b3a9bd0ccc719d69d83df65ff3d3c81e656d6a548a",
+    "license_sha256": "955b8f8465c951d3e0745d0c738497d882037746470c68c3fe2a7a68d889d98a"
+  },
+  "tcp": {
+    "repository": "miyako/tcp",
+    "version": "20.0.10",
+    "revision": "83d27fc71451061fc8949161e0bddb1cd8933fc8",
+    "url": "https://github.com/miyako/tcp/releases/download/20.0.10/tcp.zip",
+    "sha256": "7256a8e89a8732c0697a648a19f2b0907d158e20882f6b8f0fd5eb589826bff4",
+    "license_sha256": "955b8f8465c951d3e0745d0c738497d882037746470c68c3fe2a7a68d889d98a"
+  }
+}

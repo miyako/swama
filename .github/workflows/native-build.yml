@@ -1,0 +1,65 @@
+name: Native CLI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'native/**'
+      - '.github/workflows/native-build.yml'
+      - '.github/workflows/native-release.yml'
+  workflow_call:
+    inputs:
+      upstream_ref:
+        type: string
+        default: ''
+    outputs:
+      release_tag:
+        value: ${{ jobs.build.outputs.release_tag }}
+      revision:
+        value: ${{ jobs.build.outputs.revision }}
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: 'Upstream tag, branch or SHA (empty = native/upstream.json pin)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    outputs:
+      release_tag: ${{ steps.build.outputs.release_tag }}
+      revision: ${{ steps.build.outputs.revision }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Packaging regression tests
+        run: python3 -m unittest discover -s native -p 'test_*.py'
+      - name: Build, package and smoke-test source CLI
+        id: build
+        env:
+          UPSTREAM_REF: ${{ inputs.upstream_ref }}
+        run: python3 native/build.py --upstream-ref "$UPSTREAM_REF"
+      - name: Upload complete native distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: |
+            dist/native/*.tar.gz
+            dist/native/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+      - name: Record source identity
+        env:
+          UPSTREAM_REVISION: ${{ steps.build.outputs.revision }}
+        run: echo "Built Trans-N-ai/swama at $UPSTREAM_REVISION for macOS arm64; unsigned, not notarized." >> "$GITHUB_STEP_SUMMARY"

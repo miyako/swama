@@ -3,15 +3,24 @@ name: Build and Deploy Jekyll (with plugins)
 on:
   push:
     branches: ["main"]
+  pull_request:
+    paths:
+      - 'index.md'
+      - '_config.yml'
+      - '_includes/**'
+      - '_layouts/**'
+      - '_plugins/**'
+      - '_sass/**'
+      - 'assets/**'
+      - 'Gemfile'
+      - '.github/workflows/jekyll-gh-pages.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -39,6 +48,11 @@ jobs:
           path: ./_site
 
   deploy:
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

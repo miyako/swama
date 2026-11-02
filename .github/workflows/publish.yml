@@ -1,6 +1,15 @@
 name: Publish
   
 on:
+  pull_request:
+    paths:
+      - 'native/**'
+      - '.github/workflows/native-build.yml'
+      - '.github/workflows/native-release.yml'
+      - '.github/workflows/publish.yml'
+      - 'package.json'
+      - 'swama/Project/**'
+      - 'swama/Resources/**'
   push:
     branches:
     - main
@@ -13,7 +22,7 @@ on:
     inputs:
         use_self_hosted:
             type: boolean
-            description: when github hosted runners are busy
+            description: use self-hosted ARM64 runner for 4D packaging (native build stays hosted)
             required: true
             default: false
         mode:
@@ -24,16 +33,33 @@ on:
           - minor 
           - major
           required: true
+        upstream_ref:
+          type: string
+          description: upstream tag, branch or SHA (empty uses native/upstream.json pin)
+          default: ''
 
 env: 
   project_path: swama/Project/swama.4DProject
+
+concurrency:
+  group: swama-component-${{ github.event_name == 'pull_request' && github.ref || 'publish' }}
+  cancel-in-progress: false
   
 jobs:
 
+  native:
+    uses: ./.github/workflows/native-build.yml
+    permissions:
+      contents: read
+    with:
+      upstream_ref: ${{ inputs.upstream_ref || '' }}
+
   publish:
-    if: ${{ github.event.inputs.use_self_hosted != 'true' }}
+    needs: native
+    if: ${{ github.event_name != 'pull_request' && github.event.inputs.use_self_hosted != 'true' }}
     permissions: write-all
-    runs-on: [macos-latest]
+    runs-on: macos-26
+    timeout-minutes: 75
     steps:
 
       - name: configure
@@ -45,11 +71,22 @@ jobs:
       - name: checkout 
         uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: download freshly built native CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: .native-build/download
+
       - name: set version
         id: version
-        uses: miyako/4D/.github/actions/package-set-version@v1
-        with:
-          mode: ${{ steps.configure.outputs.mode }}
+        env:
+          RELEASE_MODE: ${{ steps.configure.outputs.mode }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 native/release.py version --mode "$RELEASE_MODE"
 
       - name: get tool version
         id: tool
@@ -64,6 +101,16 @@ jobs:
           version: ${{ steps.tool.outputs.version }}
           build: ${{ steps.tool.outputs.build }}
           arch: ${{ steps.tool.outputs.arch }}
+
+      - name: install complete native distribution
+        run: |
+          cd .native-build/download
+          shasum -a 256 --check ./*.sha256
+          cd ../..
+          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS --component-package
+
+      - name: Resolve pinned 4D dependencies and verify compilation
+        run: python3 native/component.py --tool tool4d.app/Contents/MacOS/tool4d
 
       - name: build
         id: build
@@ -81,39 +128,38 @@ jobs:
           APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
 
-      - name: codesign
-        id: codesign
-        uses: miyako/4D/.github/actions/deployment-codesign-product@v1
-        with: 
-          sign: ${{ secrets.CODESIGN_APPLE_ID }} 
-          apple_id: ${{ secrets.NOTARYTOOL_APPLE_ID }}         
-          team_id: ${{ secrets.NOTARYTOOL_TEAM_ID }}   
-          password: ${{ secrets.NOTARYTOOL_PASSWORD }}
-          product_path: ${{ steps.build.outputs.product_path }}
-          keychain: ${{ steps.keychain.outputs.KEYCHAIN_PATH }}
-          
-      - name: zip
-        id: zip
-        uses: miyako/4D/.github/actions/deployment-create-zip@v1
-        with: 
-          dmg_path: ${{ steps.codesign.outputs.dmg_path }}
-          zip_path: ${{ steps.codesign.outputs.zip_path }}
-
-      - name: upload assets
-        id: upload
-        uses: miyako/4D/.github/actions/deployment-release-assets@v1
-        with: 
-          dmg_path: ${{ steps.zip.outputs.dmg_path }}
-          zip_path: ${{ steps.zip.outputs.zip_path }}    
-          tag_name: ${{ steps.version.outputs.version }}   
-          release_name: ${{ steps.version.outputs.version }}  
+      - name: Sign, require Accepted notarization and verify final distributions
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+          PRODUCT_PATH: ${{ steps.build.outputs.product_path }}
+          COMPONENT_VERSION: ${{ steps.version.outputs.version }}
+          SIGN_IDENTITY: ${{ secrets.CODESIGN_APPLE_ID }}
+          SIGN_KEYCHAIN: ${{ steps.keychain.outputs.KEYCHAIN_PATH }}
+          NOTARY_APPLE_ID: ${{ secrets.NOTARYTOOL_APPLE_ID }}
+          NOTARY_TEAM: ${{ secrets.NOTARYTOOL_TEAM_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARYTOOL_PASSWORD }}
+        run: python3 native/release.py package "$PRODUCT_PATH" "$COMPONENT_VERSION"
+
+      - name: Publish new verified release without overwriting tags or assets
+        env:
+          COMPONENT_VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 native/release.py publish "$COMPONENT_VERSION"
+
+      - name: Retain release verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-release-evidence-hosted
+          path: dist/component/
+          if-no-files-found: ignore
+          retention-days: 30
 
   publish-locally:
-    if: ${{ github.event.inputs.use_self_hosted == 'true' }}
+    needs: native
+    if: ${{ github.event_name != 'pull_request' && github.event.inputs.use_self_hosted == 'true' }}
     permissions: write-all
-    runs-on: [self-hosted, macos]
+    runs-on: [self-hosted, macos, ARM64]
+    timeout-minutes: 75
     steps:
 
       - name: configure
@@ -125,11 +171,22 @@ jobs:
       - name: checkout 
         uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: download freshly built native CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: .native-build/download
+
       - name: set version
         id: version
-        uses: miyako/4D/.github/actions/package-set-version@v1
-        with:
-          mode: ${{ steps.configure.outputs.mode }}
+        env:
+          RELEASE_MODE: ${{ steps.configure.outputs.mode }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 native/release.py version --mode "$RELEASE_MODE"
 
       - name: get tool version
         id: tool
@@ -144,6 +201,16 @@ jobs:
           version: ${{ steps.tool.outputs.version }}
           build: ${{ steps.tool.outputs.build }}
           arch: ${{ steps.tool.outputs.arch }}
+
+      - name: install complete native distribution
+        run: |
+          cd .native-build/download
+          shasum -a 256 --check ./*.sha256
+          cd ../..
+          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS --component-package
+
+      - name: Resolve pinned 4D dependencies and verify compilation
+        run: python3 native/component.py --tool tool4d.app/Contents/MacOS/tool4d
 
       - name: build
         id: build
@@ -161,31 +228,92 @@ jobs:
           APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
 
-      - name: codesign
-        id: codesign
-        uses: miyako/4D/.github/actions/deployment-codesign-product@v1
-        with: 
-          sign: ${{ secrets.CODESIGN_APPLE_ID }} 
-          apple_id: ${{ secrets.NOTARYTOOL_APPLE_ID }}         
-          team_id: ${{ secrets.NOTARYTOOL_TEAM_ID }}   
-          password: ${{ secrets.NOTARYTOOL_PASSWORD }}
-          product_path: ${{ steps.build.outputs.product_path }}
-          keychain: ${{ steps.keychain.outputs.KEYCHAIN_PATH }}
-          
-      - name: zip
-        id: zip
-        uses: miyako/4D/.github/actions/deployment-create-zip@v1
-        with: 
-          dmg_path: ${{ steps.codesign.outputs.dmg_path }}
-          zip_path: ${{ steps.codesign.outputs.zip_path }}
-
-      - name: upload assets
-        id: upload
-        uses: miyako/4D/.github/actions/deployment-release-assets@v1
-        with: 
-          dmg_path: ${{ steps.zip.outputs.dmg_path }}
-          zip_path: ${{ steps.zip.outputs.zip_path }}    
-          tag_name: ${{ steps.version.outputs.version }}   
-          release_name: ${{ steps.version.outputs.version }}  
+      - name: Sign, require Accepted notarization and verify final distributions
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+          PRODUCT_PATH: ${{ steps.build.outputs.product_path }}
+          COMPONENT_VERSION: ${{ steps.version.outputs.version }}
+          SIGN_IDENTITY: ${{ secrets.CODESIGN_APPLE_ID }}
+          SIGN_KEYCHAIN: ${{ steps.keychain.outputs.KEYCHAIN_PATH }}
+          NOTARY_APPLE_ID: ${{ secrets.NOTARYTOOL_APPLE_ID }}
+          NOTARY_TEAM: ${{ secrets.NOTARYTOOL_TEAM_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARYTOOL_PASSWORD }}
+        run: python3 native/release.py package "$PRODUCT_PATH" "$COMPONENT_VERSION"
+
+      - name: Publish new verified release without overwriting tags or assets
+        env:
+          COMPONENT_VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 native/release.py publish "$COMPONENT_VERSION"
+
+      - name: Retain release verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-release-evidence-self-hosted
+          path: dist/component/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  component-check:
+    name: Verify unsigned 4D component
+    if: github.event_name == 'pull_request'
+    needs: native
+    permissions:
+      contents: read
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: .native-build/download
+      - name: Install verified native distribution
+        run: |
+          cd .native-build/download
+          shasum -a 256 --check ./*.sha256
+          cd ../..
+          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS
+      - name: Read tool4d version
+        id: tool
+        uses: miyako/4D/.github/actions/tool4d-get-version@v1
+        with:
+          build_project_name: swama
+      - name: Download tool4d
+        uses: miyako/4D/.github/actions/tool4d-download@v1
+        with:
+          platform: ${{ steps.tool.outputs.platform }}
+          branch: ${{ steps.tool.outputs.branch }}
+          version: ${{ steps.tool.outputs.version }}
+          build: ${{ steps.tool.outputs.build }}
+          arch: ${{ steps.tool.outputs.arch }}
+      - name: Resolve pinned 4D dependencies and verify compilation
+        run: python3 native/component.py --tool tool4d.app/Contents/MacOS/tool4d
+
+      - name: Compile and package without version bump or signing
+        id: component
+        uses: miyako/4D/.github/actions/build-component@v1
+        with:
+          project_path: ${{ github.workspace }}/swama/Project/swama.4DProject
+          pack_project: 'true'
+          use_standard_zip: 'true'
+      - name: Verify actual component output and native resources
+        env:
+          PRODUCT_PATH: ${{ steps.component.outputs.product_path }}
+        run: |
+          test -d "$PRODUCT_PATH"
+          test -n "$(find "$PRODUCT_PATH" -iname '*.4dz' -type f -print -quit)"
+          python3 native/smoke.py "$PRODUCT_PATH/Resources/bin/macOS"
+          git diff --exit-code -- package.json native/upstream.json
+          tar -czf .native-build/swama-component-validation.tar.gz -C "$(dirname "$PRODUCT_PATH")" "$(basename "$PRODUCT_PATH")"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swama-component-validation-macos-arm64
+          path: .native-build/swama-component-validation.tar.gz
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/Trans-N-ai/swama.git",
+  "revision": "545894b3e9bda3a18453bf46fbff9e2f55f6f363",
+  "version": "2.5.1",
+  "minimum_macos": "15.4",
+  "swift_runtime_license": {
+    "url": "https://raw.githubusercontent.com/swiftlang/swift/064859e41d68596f486c5d724401cb370f260409/LICENSE.txt",
+    "sha256": "770af8291f708538d8ff885a0bbc4e045cd700531741c4f99528d435c14d7f55"
+  }
+}
