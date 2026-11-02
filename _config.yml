@@ -10,7 +10,7 @@ baseurl: /swama
 title: "Swama"
 description: "Native Swift/MLX inference on Apple Silicon. Run a local server or integrate it with 4D."
 url: "https://miyako.github.io"
-logo: "/assets/logo.png"
+logo: "/assets/swama.png"
 component_version: "20.1.6"
 show_downloads: false      # source archives are not native CLI downloads
 github:
