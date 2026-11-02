@@ -113,6 +113,8 @@ Only use that default-port pattern when the default server is already running; c
 
 ## Configuration
 
+<div class="table-wrap" markdown="1">
+
 | Setting | Meaning |
 |---|---|
 | `SWAMA_MODELS` | CLI model directory; default `~/.swama/models` |
@@ -120,6 +122,8 @@ Only use that default-port pattern when the default server is already running; c
 | `--context-limit` / `SWAMA_CONTEXT_LIMIT` | Context length |
 | `SWAMA_REGISTRY` | `HUGGING_FACE` or `MODEL_SCOPE` |
 | `SWAMA_PROMPT_CACHE=0` | Disable prompt caching |
+
+</div>
 
 These are upstream CLI settings. The 4D constructor also configures its own home folder, downloaded model and worker options; do not assume those paths equal the CLI defaults. Use explicit `host: "127.0.0.1"` in the component options or `--host 127.0.0.1` with the CLI.
 
