@@ -26,6 +26,10 @@ Every native package contains `swama`, all SwiftPM `.bundle` resources, MLX kern
 
 For component publication, the verified native inventory is retained as `SOURCE_BUILD_SHA256SUMS`: it and `BUILD_INFO.json` describe the **pre-sign source-build input**, not final component bytes. Component signing can change executable/bundle hashes; do not use that input inventory to verify the signed component.
 
+Production component publication signs every nested Mach-O and executable bundle with the configured Developer ID, secure timestamp and hardened runtime; signature/team failures stop the job. It requires Apple's explicit notarization status **Accepted**, staples and validates the DMG ticket, and checks Gatekeeper acceptance. The final mounted DMG and extracted ZIP are checked again for nested signatures, complete final-byte inventories and working CLI/server resources. `SHA256SUMS` inside the component and native directory covers post-sign bytes; the external release inventory covers the delivered archives and verification reports. `Resources/RELEASE_INFO.json`, `SIGNING_REPORT.json` and `NOTARIZATION.json` record provenance and results. The ZIP contains the same signed component; the offline notarization ticket is stapled to the DMG.
+
+Release version commits and tags are pushed atomically only after verification, and the uploaded assets are downloaded and compared before the draft release becomes public. Existing tags/releases are never overwritten. Manual Publish can target a reviewed feature branch without merging it; the release tag identifies the actual version commit, not an unrelated default-branch snapshot.
+
 ## Build locally
 
 Use an Apple Silicon Mac with **Xcode 26.6 (including Metal tools and Swift 6.3.3)** and Python 3.12+. CI selects this Xcode on `macos-26`, matching the validated local compiler. Upstream declares Swift 6.2 as its package minimum, but notes a Swift 6.2.1 compiler issue; older toolchains are not validated here. Dependencies and sources require network access; builds/smoke tests do not download models.

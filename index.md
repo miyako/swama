@@ -18,6 +18,8 @@ These CLI packages are ad-hoc signed, **not Developer ID signed or notarized**. 
 
 In component releases, `BUILD_INFO.json` and `SOURCE_BUILD_SHA256SUMS` identify the verified **pre-sign native input**. They are not an inventory of final signed component bytes, since signing may alter executables and bundles.
 
+Production component releases require timestamped Developer ID/hardened-runtime signatures for all nested code, explicit **Accepted** Apple notarization, a validated stapled DMG ticket and Gatekeeper acceptance. The mounted DMG and extracted ZIP must pass final nested-signature, checksum and CLI/server checks before publication. Use the component's post-sign `SHA256SUMS` and the release's external `SHA256SUMS` for final-byte verification; see `Resources/RELEASE_INFO.json`, `SIGNING_REPORT.json` and `NOTARIZATION.json` for provenance and evidence. The ZIP contains the same signed component; the stapled offline ticket is on the DMG. Existing releases/tags are never overwritten.
+
 Both component Publish paths now wait for a source build, verify the archive, and install the entire distribution before packaging. The [repository README](https://github.com/miyako/swama#build-locally) documents local builds using Xcode 26.6/Swift 6.3.3 (including Metal tools) and Python 3.12+, pinned defaults and optional upstream ref overrides.
 
 ## Standalone server

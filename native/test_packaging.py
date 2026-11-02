@@ -141,7 +141,7 @@ class PackagingTests(unittest.TestCase):
         workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/publish.yml").read_text()
         hosted, self_hosted = workflow.split("  publish-locally:", 1)
         for job in (hosted, self_hosted):
-            version = job.index("uses: miyako/4D/.github/actions/package-set-version@v1")
+            version = job.index("python3 native/release.py version")
             install_step = job.index("python3 native/install.py")
             build = job.index("uses: miyako/4D/.github/actions/build-component@v1")
             self.assertLess(version, install_step)
