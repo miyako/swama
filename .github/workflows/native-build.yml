@@ -1,0 +1,129 @@
+name: Native CLI
+
+on:
+  pull_request:
+    paths:
+      - 'native/**'
+      - '.github/workflows/native-build.yml'
+      - '.github/workflows/native-release.yml'
+      - '.github/workflows/publish.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'native/**'
+      - '.github/workflows/native-build.yml'
+      - '.github/workflows/native-release.yml'
+  workflow_call:
+    inputs:
+      upstream_ref:
+        type: string
+        default: ''
+    outputs:
+      release_tag:
+        value: ${{ jobs.build.outputs.release_tag }}
+      revision:
+        value: ${{ jobs.build.outputs.revision }}
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: 'Upstream tag, branch or SHA (empty = native/upstream.json pin)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    outputs:
+      release_tag: ${{ steps.build.outputs.release_tag }}
+      revision: ${{ steps.build.outputs.revision }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Packaging regression tests
+        run: python3 -m unittest discover -s native -p 'test_*.py'
+      - name: Build, package and smoke-test source CLI
+        id: build
+        env:
+          UPSTREAM_REF: ${{ inputs.upstream_ref }}
+        run: python3 native/build.py --upstream-ref "$UPSTREAM_REF"
+      - name: Upload complete native distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: |
+            dist/native/*.tar.gz
+            dist/native/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+      - name: Record source identity
+        env:
+          UPSTREAM_REVISION: ${{ steps.build.outputs.revision }}
+        run: echo "Built Trans-N-ai/swama at $UPSTREAM_REVISION for macOS arm64; unsigned, not notarized." >> "$GITHUB_STEP_SUMMARY"
+
+  component-check:
+    name: Verify unsigned 4D component
+    needs: build
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: .native-build/download
+      - name: Install verified native distribution
+        run: |
+          cd .native-build/download
+          shasum -a 256 --check ./*.sha256
+          cd ../..
+          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS
+      - name: Read tool4d version
+        id: tool
+        uses: miyako/4D/.github/actions/tool4d-get-version@v1
+        with:
+          build_project_name: swama
+      - name: Download tool4d
+        uses: miyako/4D/.github/actions/tool4d-download@v1
+        with:
+          platform: ${{ steps.tool.outputs.platform }}
+          branch: ${{ steps.tool.outputs.branch }}
+          version: ${{ steps.tool.outputs.version }}
+          build: ${{ steps.tool.outputs.build }}
+          arch: ${{ steps.tool.outputs.arch }}
+      - name: Compile and package without version bump or signing
+        id: component
+        uses: miyako/4D/.github/actions/build-component@v1
+        with:
+          project_path: ${{ github.workspace }}/swama/Project/swama.4DProject
+          pack_project: 'true'
+          use_standard_zip: 'true'
+      - name: Verify actual component output and native resources
+        env:
+          PRODUCT_PATH: ${{ steps.component.outputs.product_path }}
+        run: |
+          test -d "$PRODUCT_PATH"
+          test -n "$(find "$PRODUCT_PATH" -name '*.4dz' -type f -print -quit)"
+          python3 native/smoke.py "$PRODUCT_PATH/Resources/bin/macOS"
+          git diff --exit-code -- package.json native/upstream.json
+          tar -czf .native-build/swama-component-validation.tar.gz -C "$(dirname "$PRODUCT_PATH")" "$(basename "$PRODUCT_PATH")"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swama-component-validation-macos-arm64
+          path: .native-build/swama-component-validation.tar.gz
+          if-no-files-found: error
+          retention-days: 14

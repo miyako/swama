@@ -13,7 +13,7 @@ on:
     inputs:
         use_self_hosted:
             type: boolean
-            description: when github hosted runners are busy
+            description: use self-hosted ARM64 runner for 4D packaging (native build stays hosted)
             required: true
             default: false
         mode:
@@ -24,13 +24,29 @@ on:
           - minor 
           - major
           required: true
+        upstream_ref:
+          type: string
+          description: upstream tag, branch or SHA (empty uses native/upstream.json pin)
+          default: ''
 
 env: 
   project_path: swama/Project/swama.4DProject
+
+concurrency:
+  group: swama-component-publish
+  cancel-in-progress: false
   
 jobs:
 
+  native:
+    uses: ./.github/workflows/native-build.yml
+    permissions:
+      contents: read
+    with:
+      upstream_ref: ${{ inputs.upstream_ref || '' }}
+
   publish:
+    needs: native
     if: ${{ github.event.inputs.use_self_hosted != 'true' }}
     permissions: write-all
     runs-on: [macos-latest]
@@ -44,6 +60,16 @@ jobs:
 
       - name: checkout 
         uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: download freshly built native CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: .native-build/download
 
       - name: set version
         id: version
@@ -64,6 +90,13 @@ jobs:
           version: ${{ steps.tool.outputs.version }}
           build: ${{ steps.tool.outputs.build }}
           arch: ${{ steps.tool.outputs.arch }}
+
+      - name: install complete native distribution
+        run: |
+          cd .native-build/download
+          shasum -a 256 --check ./*.sha256
+          cd ../..
+          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS --component-package
 
       - name: build
         id: build
@@ -111,9 +144,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
 
   publish-locally:
+    needs: native
     if: ${{ github.event.inputs.use_self_hosted == 'true' }}
     permissions: write-all
-    runs-on: [self-hosted, macos]
+    runs-on: [self-hosted, macos, ARM64]
     steps:
 
       - name: configure
@@ -124,6 +158,16 @@ jobs:
 
       - name: checkout 
         uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: download freshly built native CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: .native-build/download
 
       - name: set version
         id: version
@@ -144,6 +188,13 @@ jobs:
           version: ${{ steps.tool.outputs.version }}
           build: ${{ steps.tool.outputs.build }}
           arch: ${{ steps.tool.outputs.arch }}
+
+      - name: install complete native distribution
+        run: |
+          cd .native-build/download
+          shasum -a 256 --check ./*.sha256
+          cd ../..
+          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS --component-package
 
       - name: build
         id: build

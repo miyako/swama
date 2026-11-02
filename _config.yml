@@ -5,16 +5,16 @@ kramdown:
   syntax_highlighter: rouge
 highlighter: rouge
 plugins_dir: _plugins
-baseurl: /llama-cpp
+baseurl: /swama
 
 title: "Swama"
 description: "Use Swama from 4D"
 logo: "/assets/logo.png"   # optional
-show_downloads: true       # controls the download links in header
+show_downloads: false      # source archives are not native CLI downloads
 github:
   is_user_page: true
   owner_url: "https://github.com/miyako"
-  repository_url: "https://github.com/miyako/Swama"
+  repository_url: "https://github.com/miyako/swama"
   is_project_page: false
 
 exclude:
@@ -23,3 +23,6 @@ exclude:
   - "LICENSE"
   - "README.md"
   - "Gemfile"
+  - "native"
+  - "swama"
+  - "dist"

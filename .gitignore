@@ -4,3 +4,6 @@ swama/Project/DerivedData/*
 swama/Resources/en.lproj/syntaxEN.json
 swama/Project/Sources/Methods/serve.4dm
 swama/Libraries/lib4d-arm64.dylib
+.native-build/
+dist/
+__pycache__/
