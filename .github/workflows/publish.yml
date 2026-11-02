@@ -1,6 +1,15 @@
 name: Publish
   
 on:
+  pull_request:
+    paths:
+      - 'native/**'
+      - '.github/workflows/native-build.yml'
+      - '.github/workflows/native-release.yml'
+      - '.github/workflows/publish.yml'
+      - 'package.json'
+      - 'swama/Project/**'
+      - 'swama/Resources/**'
   push:
     branches:
     - main
@@ -33,7 +42,7 @@ env:
   project_path: swama/Project/swama.4DProject
 
 concurrency:
-  group: swama-component-publish
+  group: swama-component-${{ github.event_name == 'pull_request' && github.ref || 'publish' }}
   cancel-in-progress: false
   
 jobs:
@@ -47,7 +56,7 @@ jobs:
 
   publish:
     needs: native
-    if: ${{ github.event.inputs.use_self_hosted != 'true' }}
+    if: ${{ github.event_name != 'pull_request' && github.event.inputs.use_self_hosted != 'true' }}
     permissions: write-all
     runs-on: [macos-latest]
     steps:
@@ -145,7 +154,7 @@ jobs:
 
   publish-locally:
     needs: native
-    if: ${{ github.event.inputs.use_self_hosted == 'true' }}
+    if: ${{ github.event_name != 'pull_request' && github.event.inputs.use_self_hosted == 'true' }}
     permissions: write-all
     runs-on: [self-hosted, macos, ARM64]
     steps:
@@ -240,3 +249,64 @@ jobs:
           release_name: ${{ steps.version.outputs.version }}  
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+
+  component-check:
+    name: Verify unsigned 4D component
+    if: github.event_name == 'pull_request'
+    needs: native
+    permissions:
+      contents: read
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: .native-build/download
+      - name: Install verified native distribution
+        run: |
+          cd .native-build/download
+          shasum -a 256 --check ./*.sha256
+          cd ../..
+          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS
+      - name: Read tool4d version
+        id: tool
+        uses: miyako/4D/.github/actions/tool4d-get-version@v1
+        with:
+          build_project_name: swama
+      - name: Download tool4d
+        uses: miyako/4D/.github/actions/tool4d-download@v1
+        with:
+          platform: ${{ steps.tool.outputs.platform }}
+          branch: ${{ steps.tool.outputs.branch }}
+          version: ${{ steps.tool.outputs.version }}
+          build: ${{ steps.tool.outputs.build }}
+          arch: ${{ steps.tool.outputs.arch }}
+      - name: Compile and package without version bump or signing
+        id: component
+        uses: miyako/4D/.github/actions/build-component@v1
+        with:
+          project_path: ${{ github.workspace }}/swama/Project/swama.4DProject
+          pack_project: 'true'
+          use_standard_zip: 'true'
+      - name: Verify actual component output and native resources
+        env:
+          PRODUCT_PATH: ${{ steps.component.outputs.product_path }}
+        run: |
+          test -d "$PRODUCT_PATH"
+          test -n "$(find "$PRODUCT_PATH" -name '*.4dz' -type f -print -quit)"
+          python3 native/smoke.py "$PRODUCT_PATH/Resources/bin/macOS"
+          git diff --exit-code -- package.json native/upstream.json
+          tar -czf .native-build/swama-component-validation.tar.gz -C "$(dirname "$PRODUCT_PATH")" "$(basename "$PRODUCT_PATH")"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swama-component-validation-macos-arm64
+          path: .native-build/swama-component-validation.tar.gz
+          if-no-files-found: error
+          retention-days: 14

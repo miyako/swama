@@ -1,6 +1,7 @@
 import hashlib
 import json
 from pathlib import Path
+import re
 import tempfile
 import tarfile
 import unittest
@@ -145,6 +146,19 @@ class PackagingTests(unittest.TestCase):
             build = job.index("uses: miyako/4D/.github/actions/build-component@v1")
             self.assertLess(version, install_step)
             self.assertLess(install_step, build)
+
+    def test_pull_requests_cannot_enter_either_production_publish_job(self):
+        workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/publish.yml").read_text()
+        for job in ("publish", "publish-locally"):
+            block = workflow.split(f"\n  {job}:\n", 1)[1]
+            condition = next(line for line in block.splitlines() if line.startswith("    if:"))
+            self.assertIn("github.event_name != 'pull_request'", condition)
+        validation = re.split(r"\n  [\w-]+:\n", workflow.split("\n  component-check:\n", 1)[1], maxsplit=1)[0]
+        self.assertIn("if: github.event_name == 'pull_request'", validation)
+        self.assertIn("contents: read", validation)
+        self.assertNotIn("secrets.", validation)
+        self.assertNotIn("package-set-version", validation)
+        self.assertNotIn("deployment-", validation)
 
 
 if __name__ == "__main__":
