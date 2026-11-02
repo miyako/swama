@@ -7,22 +7,23 @@ home: true
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero-copy">
     <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Native Swift / MLX / 4D</p>
-    <h1 id="hero-title">Local inference.<br><span>Built for your Mac.</span></h1>
+    <h1 id="hero-title">Local inference. <span>Built for your Mac.</span></h1>
     <p class="lede">Bring local AI into your application with Swama. Run models on Apple Silicon, serve chat and embeddings over HTTP, and connect from 4D or your own client.</p>
     <div class="actions">
       <a class="button primary" href="#downloads">Download Swama <span aria-hidden="true">&darr;</span></a>
       <a class="button" href="#quickstart">Make your first request <span aria-hidden="true">&rarr;</span></a>
     </div>
-    <p class="hero-note">Apple Silicon &middot; macOS 15.4+ &middot; Model weights downloaded separately</p>
   </div>
-  <div class="engine-panel" aria-label="Your application connects over local HTTP to Swama, which runs an MLX model on your Mac">
+  <div class="engine-panel" role="group" aria-label="Your application connects over local HTTP to Swama, which runs an MLX model on your Mac">
     <div class="panel-top"><span class="panel-label">The local stack</span><span class="local-tag">On your machine</span></div>
     <div class="app-node"><span class="node-symbol" aria-hidden="true">4D</span><div><strong>Your application</strong><span>AI Kit or your own HTTP client</span></div></div>
     <div class="connection">HTTP / 127.0.0.1:8080</div>
     <div class="engine-node"><img src="{{ site.logo | relative_url }}" width="52" height="52" alt=""><div><strong>Swama</strong><span>Native Swift / MLX server</span></div></div>
-    <div class="model-node"><span class="file-mark" aria-hidden="true">MLX</span><div><strong>A model you choose</strong><span>Matched to your task and memory</span></div></div>
+    <div class="connection">loads</div>
+    <div class="model-node"><span class="file-mark" aria-hidden="true">MLX</span><div><strong>A model you choose</strong><span>Matched to your task and memory; loaded from an MLX model directory</span></div></div>
     <div class="panel-bottom"><span class="status-dot" aria-hidden="true"></span> Local inference. A familiar HTTP interface.</div>
   </div>
+  <p class="hero-note">Apple Silicon &middot; macOS 15.4+ &middot; Model weights downloaded separately</p>
 </section>
 
 <div class="capability-strip" aria-label="Project capabilities">

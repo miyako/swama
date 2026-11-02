@@ -108,6 +108,8 @@ Apple's `swift-stdlib-tool` copies required runtime libraries; the source-build 
 
 Published component {{ site.component_version }} passed Developer ID signing with secure timestamps and hardened runtime, Apple notarization **Accepted**, validated DMG stapling and Gatekeeper assessment. The DMG has the offline ticket; the ZIP preserves the same signed component. Both archives passed nested-signature, complete final-byte and CLI/HTTP checks.
 
+<div class="table-wrap" markdown="1">
+
 | File | What it describes |
 |---|---|
 | `Resources/bin/macOS/BUILD_INFO.json` | Native source-build provenance, before component signing |
@@ -116,6 +118,8 @@ Published component {{ site.component_version }} passed Developer ID signing wit
 | `Resources/RELEASE_INFO.json` | Component version commit, workflow revision and run URL |
 | Release `SHA256SUMS` | Final archive and verification-report hashes |
 | Release `NOTARIZATION.json` / `SIGNING_REPORT.json` | Accepted request, staple/Gatekeeper results and nested code hashes |
+
+</div>
 
 Compare downloaded assets against their entries in the external inventory. `shasum -a 256 --check SHA256SUMS` checks all listed assets, so download every listed file first or compare the hash for your chosen archive individually. Within the extracted native directory, the same command checks its complete installed resources.
 
