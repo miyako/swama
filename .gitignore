@@ -7,3 +7,7 @@ swama/Libraries/lib4d-arm64.dylib
 .native-build/
 dist/
 __pycache__/
+swama/Components/
+swama/Resources/4D_COMPONENTS.json
+swama/Resources/4D_COMPILE_RESULT.json
+swama/Resources/licenses/4d-components/
