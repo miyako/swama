@@ -137,13 +137,15 @@ class PackagingTests(unittest.TestCase):
             self.assertFalse((destination / "SHA256SUMS").exists())
             self.assertEqual((destination / "SOURCE_BUILD_SHA256SUMS").read_text(), "pre-sign fixture\n")
 
-    def test_both_publish_jobs_install_after_version_before_component_build(self):
+    def test_both_publish_jobs_prepare_committed_resources_after_version_before_build(self):
         workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/publish.yml").read_text()
         hosted, self_hosted = workflow.split("  publish-locally:", 1)
         for job in (hosted, self_hosted):
             version = job.index("python3 native/release.py version")
-            install_step = job.index("python3 native/install.py")
+            verify_step = job.index("python3 native/update.py verify")
+            install_step = job.index("python3 native/update.py prepare-component")
             build = job.index("uses: miyako/4D/.github/actions/build-component@v1")
+            self.assertLess(verify_step, version)
             self.assertLess(version, install_step)
             self.assertLess(install_step, build)
 

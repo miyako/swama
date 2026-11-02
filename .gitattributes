@@ -1,0 +1,4 @@
+# Native inventories identify exact shipped bytes, including text resources/licenses.
+swama/Resources/bin/macOS/** -text
+native/*.json text eol=lf
+native/*.py text eol=lf
