@@ -42,7 +42,57 @@ Install the entire verified archive for local 4D development:
 python3 native/install.py dist/native/*.tar.gz swama/Resources/bin/macOS
 ```
 
-This replaces the whole resource directory, preventing stale bundles. The binary tracked in Git is legacy; cloning the repository does not rebuild it.
+This replaces the whole resource directory, preventing stale bundles. The complete pinned
+source-build distribution is tracked in Git; cloning does not rebuild it. Local replacement
+is a working-tree change, not authorization to push or publish.
+
+## Updating Git resources versus publishing a component
+
+[Update native resources]({{ site.github.repository_url }}/actions/workflows/native-update.yml)
+is a separate, trusted **main-only manual workflow**. It builds the checked-in
+`native/upstream.json` pin, not a moving override. To adopt a different upstream revision,
+review and update that pin first. With `commit_update=false` (the default) it only builds
+the native artifact. Set `commit_update=true` to validate and commit the **entire**
+`swama/Resources/bin/macOS` resource set back to `main`.
+
+The update verifies CLI/server behavior, required SwiftPM/Metal resources, runtime imports,
+architecture, deployment target, unmodified Apple-signed Swift runtimes, dependency licenses,
+source/lockfile provenance and complete checksums. Every file must be **smaller than
+104,857,600 bytes (100 MiB)** before replacement or staging; an oversized binary, runtime,
+resource or license fails without adopting any of the target. There is no LFS fallback.
+Required resource paths are explicit in `native/update.py`; review them when upstream's
+resource layout changes.
+
+Only exact changed native resource paths (including deletions) are staged. The workflow
+requires the dispatch SHA still to be `main` HEAD, rejects unrelated dirty files and uses
+a normal fast-forward push. If `main` advances or branch protection rejects the push,
+the update fails; rerun from current `main` or use a reviewed update PR. It does not rebase,
+force-push, rewrite history or bypass protection.
+
+**Publish no longer builds or downloads the native CLI.** Both hosted and self-hosted
+component paths, plus read-only PR validation, verify the clean **committed** resources
+and their pinned provenance. Missing, mismatched, extra or modified resources fail clearly,
+without falling back to a legacy executable. Production checks freshness and verifies
+resources before preparing the component version commit. Only after that clean-tree
+version step does it rename the native checksum inventory to `SOURCE_BUILD_SHA256SUMS`
+for packaging/signing. The structured 4D compilation, signing, notarization and final-byte
+verification gates remain mandatory.
+
+A push made with `GITHUB_TOKEN` **does not trigger other push workflows**. The update
+therefore has a separate `publish_component=false` default. Only explicitly enabling both
+`commit_update` and `publish_component` dispatches Publish, after a successful verified
+Git update and another current-HEAD check. Only that dispatch job has `actions: write`;
+the update job has `contents: write`, and native builds/PR checks are read-only.
+Updates and production component publication share a concurrency group.
+An authorized resource update by itself is **not** release authorization.
+
+For the resource set initially adopted from successful
+[native run 41412913680]({{ site.github.repository_url }}/actions/runs/41412913680),
+all 42 files total 80,760,021 bytes. The CLI is 73,949,696 bytes, `mlx.metallib`
+is 3,183,194 bytes, the nested `default.metallib` is 3,200,698 bytes, and the copied
+`libswiftCompatibilitySpan.dylib` is 188,176 bytes. `BUILD_INFO.json` retains the
+original clean packaging commit; `SHA256SUMS` covers every installed file except itself.
+These are pre-component-signing bytes, not a new notarized component release.
 
 ## Runtime resources
 

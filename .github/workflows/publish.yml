@@ -6,6 +6,7 @@ on:
       - 'native/**'
       - '.github/workflows/native-build.yml'
       - '.github/workflows/native-release.yml'
+      - '.github/workflows/native-update.yml'
       - '.github/workflows/publish.yml'
       - 'package.json'
       - 'swama/Project/**'
@@ -22,7 +23,7 @@ on:
     inputs:
         use_self_hosted:
             type: boolean
-            description: use self-hosted ARM64 runner for 4D packaging (native build stays hosted)
+            description: use self-hosted ARM64 runner for 4D packaging from committed native resources
             required: true
             default: false
         mode:
@@ -33,10 +34,9 @@ on:
           - minor 
           - major
           required: true
-        upstream_ref:
-          type: string
-          description: upstream tag, branch or SHA (empty uses native/upstream.json pin)
-          default: ''
+
+permissions:
+  contents: read
 
 env: 
   project_path: swama/Project/swama.4DProject
@@ -47,17 +47,10 @@ concurrency:
   
 jobs:
 
-  native:
-    uses: ./.github/workflows/native-build.yml
-    permissions:
-      contents: read
-    with:
-      upstream_ref: ${{ inputs.upstream_ref || '' }}
-
   publish:
-    needs: native
-    if: ${{ github.event_name != 'pull_request' && github.event.inputs.use_self_hosted != 'true' }}
-    permissions: write-all
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.event.repository.default_branch == 'main' && github.event.inputs.use_self_hosted != 'true' }}
+    permissions:
+      contents: write
     runs-on: macos-26
     timeout-minutes: 75
     steps:
@@ -70,16 +63,19 @@ jobs:
 
       - name: checkout 
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: true
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: download freshly built native CLI
-        uses: actions/download-artifact@v4
-        with:
-          name: swama-native-macos-arm64
-          path: .native-build/download
+      - name: Require current default-branch commit
+        run: python3 native/update.py freshness --expected "$GITHUB_SHA"
+
+      - name: Verify committed native resources and provenance
+        run: python3 native/update.py verify
 
       - name: set version
         id: version
@@ -87,6 +83,9 @@ jobs:
           RELEASE_MODE: ${{ steps.configure.outputs.mode }}
           GH_TOKEN: ${{ github.token }}
         run: python3 native/release.py version --mode "$RELEASE_MODE"
+
+      - name: Prepare verified native resources for component signing
+        run: python3 native/update.py prepare-component
 
       - name: get tool version
         id: tool
@@ -101,13 +100,6 @@ jobs:
           version: ${{ steps.tool.outputs.version }}
           build: ${{ steps.tool.outputs.build }}
           arch: ${{ steps.tool.outputs.arch }}
-
-      - name: install complete native distribution
-        run: |
-          cd .native-build/download
-          shasum -a 256 --check ./*.sha256
-          cd ../..
-          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS --component-package
 
       - name: Resolve pinned 4D dependencies and verify compilation
         run: python3 native/component.py --tool tool4d.app/Contents/MacOS/tool4d
@@ -155,9 +147,9 @@ jobs:
           retention-days: 30
 
   publish-locally:
-    needs: native
-    if: ${{ github.event_name != 'pull_request' && github.event.inputs.use_self_hosted == 'true' }}
-    permissions: write-all
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.event.repository.default_branch == 'main' && github.event.inputs.use_self_hosted == 'true' }}
+    permissions:
+      contents: write
     runs-on: [self-hosted, macos, ARM64]
     timeout-minutes: 75
     steps:
@@ -170,16 +162,19 @@ jobs:
 
       - name: checkout 
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: true
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: download freshly built native CLI
-        uses: actions/download-artifact@v4
-        with:
-          name: swama-native-macos-arm64
-          path: .native-build/download
+      - name: Require current default-branch commit
+        run: python3 native/update.py freshness --expected "$GITHUB_SHA"
+
+      - name: Verify committed native resources and provenance
+        run: python3 native/update.py verify
 
       - name: set version
         id: version
@@ -187,6 +182,9 @@ jobs:
           RELEASE_MODE: ${{ steps.configure.outputs.mode }}
           GH_TOKEN: ${{ github.token }}
         run: python3 native/release.py version --mode "$RELEASE_MODE"
+
+      - name: Prepare verified native resources for component signing
+        run: python3 native/update.py prepare-component
 
       - name: get tool version
         id: tool
@@ -201,13 +199,6 @@ jobs:
           version: ${{ steps.tool.outputs.version }}
           build: ${{ steps.tool.outputs.build }}
           arch: ${{ steps.tool.outputs.arch }}
-
-      - name: install complete native distribution
-        run: |
-          cd .native-build/download
-          shasum -a 256 --check ./*.sha256
-          cd ../..
-          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS --component-package
 
       - name: Resolve pinned 4D dependencies and verify compilation
         run: python3 native/component.py --tool tool4d.app/Contents/MacOS/tool4d
@@ -257,7 +248,6 @@ jobs:
   component-check:
     name: Verify unsigned 4D component
     if: github.event_name == 'pull_request'
-    needs: native
     permissions:
       contents: read
     runs-on: macos-26
@@ -269,16 +259,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - uses: actions/download-artifact@v4
-        with:
-          name: swama-native-macos-arm64
-          path: .native-build/download
-      - name: Install verified native distribution
-        run: |
-          cd .native-build/download
-          shasum -a 256 --check ./*.sha256
-          cd ../..
-          python3 native/install.py .native-build/download/*.tar.gz swama/Resources/bin/macOS
+      - name: Run packaging regression tests
+        run: python3 -m unittest discover -s native -p 'test_*.py'
+      - name: Verify committed native resources and provenance
+        run: python3 native/update.py verify
       - name: Read tool4d version
         id: tool
         uses: miyako/4D/.github/actions/tool4d-get-version@v1

@@ -1,0 +1,219 @@
+{
+  "repository": "https://github.com/Trans-N-ai/swama.git",
+  "requested_ref": "545894b3e9bda3a18453bf46fbff9e2f55f6f363",
+  "revision": "545894b3e9bda3a18453bf46fbff9e2f55f6f363",
+  "version": "2.5.1",
+  "platform": "macos-arm64",
+  "minimum_macos": "15.4",
+  "configuration": "release",
+  "signing": "CLI ad-hoc signed after rpath cleanup; Swift runtime copied unmodified from Xcode; distribution not Developer ID signed or notarized",
+  "packaging_revision": "66c7cadc59f5317c16d0398ab4369fe5746a03e9",
+  "packaging_dirty": false,
+  "packaging_files": {
+    "native/build.py": "30ba3e3d53a526c436485693b3444228ef7fbc6987234fbaa1b19da7bc9deedb",
+    "native/component.py": "de74c51c906ff6274a6b69268d63263b0e80c8dcf08fe808c10feea5062d0f7e",
+    "native/components.json": "d27ff49aedcd66d2b4773999eb497d69c8493b58ede42e5ae087dc9870a17bcb",
+    "native/install.py": "f7e6697eea009b4291118129b228e64e3a2e9ce33d664298c29b54b20404ff1e",
+    "native/release.py": "7c03f37ce77b174743327cbfbba1d5211909b21dd1e4bbad768a1f9245b3d1d9",
+    "native/smoke.py": "b79facf27103bcc476f01c0cff0c58f15e34720ded47448333feb3f7e603b717",
+    "native/test_component.py": "83fc5b67f63b390045f0764e3688c2bbc0fd5e2d17e9f0f1c68d41fcb206512a",
+    "native/test_packaging.py": "b05fe3f08365f8126fd4b84ac35ef823db59cc3ef5c67f4ccb570683c3023562",
+    "native/test_release.py": "a7319e6e2e1d0645982f5c9f956935dab5cfc035f0049a6500c18a8ddcc54b62",
+    "native/upstream.json": "97c4f163a49afeaf13c9539c1bdced136131baa2276d432f3ca489fd2879079e"
+  },
+  "swift": "Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)\nTarget: arm64-apple-macosx26.0",
+  "xcode": "Xcode 26.6\nBuild version 17F113",
+  "sdk": "26.5",
+  "package_resolved_sha256": "7149838c4e192230e0e3dacde36685d2a7671fa42217f0bac370195014228ccd",
+  "metal": {
+    "revision": "0bb916c67f4b9e5c682cbe02a42c701c93ab5021",
+    "compiler": "Apple metal version 32023.883 (metalfe-32023.883)\nTarget: air64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /private/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.7v5dK8/Metal.xctoolchain/usr/metal/current/bin",
+    "target": "air64-apple-macos14.0",
+    "sources": {
+      "Source/Cmlx/mlx-generated/metal/arg_reduce.metal": "7c534f7cd321b8b25c020a591fdc7bdc738f335b9681f832c0b1061b9ba1c76d",
+      "Source/Cmlx/mlx-generated/metal/conv.metal": "52c9f16d933f94290d476a52eff2b760ac1a10ad78e8261ec191634252757f23",
+      "Source/Cmlx/mlx-generated/metal/gemv.metal": "4eb18cd80eb8b5f0a113779705682f3d7a2660035c148dabe06619ee36c44a33",
+      "Source/Cmlx/mlx-generated/metal/layer_norm.metal": "84d1b0c3ee69a653a32a77a86f5f379b8d1e2fb9f77320e11c67e7f23fcdb7e7",
+      "Source/Cmlx/mlx-generated/metal/random.metal": "2f6806a359715e87ce2208596fd439187f6cd83c1bc4df36309c21c55b620524",
+      "Source/Cmlx/mlx-generated/metal/rms_norm.metal": "864bada3c1843299caf4a4af0fe968794b794114d1e5adbfea9ac64eac29d838",
+      "Source/Cmlx/mlx-generated/metal/rope.metal": "bf8f4c46cdd1375c530ab87743cf3e39d8a1df3a6c24c353dd5e039e5d8baba0",
+      "Source/Cmlx/mlx-generated/metal/scaled_dot_product_attention.metal": "a1b14b5850de08bcccb548966a98a4ddc88365f89ca20cd71c55f39217fb5b43",
+      "Source/Cmlx/mlx-generated/metal/steel/attn/kernels/steel_attention.metal": "1e24469552042b4679d751f3436248e053f2bc47f87ee9e4e11addf8a8a019d8"
+    }
+  },
+  "binary": {
+    "imports": "/Users/runner/work/swama/swama/dist/native/swama-2.5.1-545894b3e9bd-macos-arm64/swama:\n\t/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation (compatibility version 300.0.0, current version 5026.5.4)\n\t/System/Library/Frameworks/Metal.framework/Versions/A/Metal (compatibility version 1.0.0, current version 373.2.0)\n\t/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)\n\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 2100.43.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)\n\t/System/Library/Frameworks/AVFAudio.framework/Versions/A/AVFAudio (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/AVFoundation.framework/Versions/A/AVFoundation (compatibility version 1.0.0, current version 2.0.0)\n\t/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit (compatibility version 45.0.0, current version 2685.60.104)\n\t/System/Library/Frameworks/AuthenticationServices.framework/Versions/A/AuthenticationServices (compatibility version 1.0.0, current version 624.2.5)\n\t/System/Library/Frameworks/Combine.framework/Versions/A/Combine (compatibility version 1.0.0, current version 3023.0.0)\n\t/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 5026.5.4)\n\t/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics (compatibility version 64.0.0, current version 1965.5.1)\n\t/System/Library/Frameworks/CoreImage.framework/Versions/A/CoreImage (compatibility version 1.0.1, current version 7.0.0)\n\t/System/Library/Frameworks/CoreML.framework/Versions/A/CoreML (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/CoreMedia.framework/Versions/A/CoreMedia (compatibility version 1.0.0, current version 3320.8.5)\n\t/System/Library/Frameworks/CryptoKit.framework/Versions/A/CryptoKit (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/ImageIO.framework/Versions/A/ImageIO (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/NaturalLanguage.framework/Versions/A/NaturalLanguage (compatibility version 1.0.0, current version 114.0.0)\n\t/System/Library/Frameworks/Network.framework/Versions/A/Network (compatibility version 1.0.0, current version 5812.121.1)\n\t/System/Library/Frameworks/Security.framework/Versions/A/Security (compatibility version 1.0.0, current version 61901.120.67)\n\t/usr/lib/libobjc.A.dylib (compatibility version 1.0.0, current version 228.0.0)\n\t/usr/lib/swift/libswiftAVFoundation.dylib (compatibility version 1.0.0, current version 2420.7.1)\n\t/usr/lib/swift/libswiftCore.dylib (compatibility version 0.0.0, current version 0.0.0)\n\t/usr/lib/swift/libswiftCoreAudio.dylib (compatibility version 1.0.0, current version 411.255.0, weak)\n\t/usr/lib/swift/libswiftCoreFoundation.dylib (compatibility version 1.0.0, current version 120.100.0)\n\t/usr/lib/swift/libswiftCoreImage.dylib (compatibility version 1.0.0, current version 2.2.0, weak)\n\t/usr/lib/swift/libswiftCoreMIDI.dylib (compatibility version 1.0.0, current version 6.0.0, weak)\n\t/usr/lib/swift/libswiftCoreMedia.dylib (compatibility version 1.0.0, current version 3320.8.5)\n\t/usr/lib/swift/libswiftDarwin.dylib (compatibility version 1.0.0, current version 377.120.8)\n\t/usr/lib/swift/libswiftDispatch.dylib (compatibility version 1.0.0, current version 1542.100.32)\n\t/usr/lib/swift/libswiftIOKit.dylib (compatibility version 1.0.0, current version 1.0.0, weak)\n\t/usr/lib/swift/libswiftMetal.dylib (compatibility version 1.0.0, current version 373.2.0, weak)\n\t/usr/lib/swift/libswiftNaturalLanguage.dylib (compatibility version 1.0.0, current version 4.3.0)\n\t/usr/lib/swift/libswiftOSLog.dylib (compatibility version 1.0.0, current version 10.0.0, weak)\n\t/usr/lib/swift/libswiftObjectiveC.dylib (compatibility version 1.0.0, current version 951.7.0)\n\t/usr/lib/swift/libswiftObservation.dylib (compatibility version 0.0.0, current version 0.0.0, weak)\n\t/usr/lib/swift/libswiftQuartzCore.dylib (compatibility version 1.0.0, current version 5.0.0, weak)\n\t/usr/lib/swift/libswiftRegexBuilder.dylib (compatibility version 1.0.0, current version 0.0.0)\n\t/usr/lib/swift/libswiftSpatial.dylib (compatibility version 1.0.0, current version 1.0.0, weak)\n\t/usr/lib/swift/libswiftSynchronization.dylib (compatibility version 0.0.0, current version 0.0.0)\n\t/usr/lib/swift/libswiftUniformTypeIdentifiers.dylib (compatibility version 1.0.0, current version 877.5.1)\n\t/usr/lib/swift/libswiftXPC.dylib (compatibility version 1.0.0, current version 128.120.2, weak)\n\t/usr/lib/swift/libswift_Builtin_float.dylib (compatibility version 0.0.0, current version 0.0.0, weak)\n\t/usr/lib/swift/libswift_Concurrency.dylib (compatibility version 0.0.0, current version 0.0.0)\n\t/usr/lib/swift/libswift_StringProcessing.dylib (compatibility version 1.0.0, current version 0.0.0)\n\t/usr/lib/swift/libswiftos.dylib (compatibility version 1.0.0, current version 1082.0.0)\n\t/usr/lib/swift/libswiftsimd.dylib (compatibility version 1.0.0, current version 23.0.0, weak)\n\t@rpath/libswiftCompatibilitySpan.dylib (compatibility version 0.0.0, current version 0.0.0, weak)\n\t/usr/lib/swift/libswift_errno.dylib (compatibility version 1.0.0, current version 377.120.8)\n\t/usr/lib/swift/libswift_stdio.dylib (compatibility version 1.0.0, current version 377.120.8)",
+    "minimum_macos": "15.4"
+  },
+  "swift_runtime": {
+    "libraries": {
+      "libswiftCompatibilitySpan.dylib": {
+        "source": "/Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-6.2/macosx/libswiftCompatibilitySpan.dylib",
+        "sha256": "78d57570ff3c5e67a3ca4b626035ce465a4895c7cd1fb23257e3cf0baca476c2"
+      }
+    },
+    "license": {
+      "url": "https://raw.githubusercontent.com/swiftlang/swift/064859e41d68596f486c5d724401cb370f260409/LICENSE.txt",
+      "sha256": "770af8291f708538d8ff885a0bbc4e045cd700531741c4f99528d435c14d7f55"
+    }
+  },
+  "swift_runtime_audits": {
+    "libswiftCompatibilitySpan.dylib": {
+      "imports": "/Users/runner/work/swama/swama/dist/native/swama-2.5.1-545894b3e9bd-macos-arm64/libswiftCompatibilitySpan.dylib:\n\t/usr/lib/swift/libswiftCompatibilitySpan.dylib (compatibility version 1.0.0, current version 6.3.3)\n\t/usr/lib/swift/libswiftCore.dylib (compatibility version 1.0.0, current version 6.3.3)\n\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 2100.39.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)",
+      "minimum_macos": "11.0"
+    }
+  },
+  "dependencies": [
+    {
+      "identity": "eventsource",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/mattt/EventSource.git",
+      "state": {
+        "revision": "86b5096ac59ab46e66bd1f6377c604bc1dab0bc2",
+        "version": "1.5.1"
+      }
+    },
+    {
+      "identity": "mlx-audio-swift",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/Blaizzy/mlx-audio-swift.git",
+      "state": {
+        "revision": "cae704f53bc32a3d0b606823828fbc5bedaaf388"
+      }
+    },
+    {
+      "identity": "mlx-swift",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/ml-explore/mlx-swift.git",
+      "state": {
+        "revision": "0bb916c67f4b9e5c682cbe02a42c701c93ab5021",
+        "version": "0.31.6"
+      }
+    },
+    {
+      "identity": "mlx-swift-lm",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/ml-explore/mlx-swift-lm",
+      "state": {
+        "revision": "4ffa64deea2e88ee32bd3764fc3c10ac80439514"
+      }
+    },
+    {
+      "identity": "swift-argument-parser",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/apple/swift-argument-parser",
+      "state": {
+        "revision": "6a52f3251125d74daf04fcbd5e6f08a75d074382",
+        "version": "1.8.2"
+      }
+    },
+    {
+      "identity": "swift-asn1",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/apple/swift-asn1.git",
+      "state": {
+        "revision": "a9a5efd40eaf558a2bcd48d64b1d1646be686008",
+        "version": "1.7.1"
+      }
+    },
+    {
+      "identity": "swift-atomics",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/apple/swift-atomics.git",
+      "state": {
+        "revision": "0442cb5a3f98ab802acb777929fdb446bda11a34",
+        "version": "1.3.1"
+      }
+    },
+    {
+      "identity": "swift-collections",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/apple/swift-collections.git",
+      "state": {
+        "revision": "a0cb0954ecb21e4e31b0070e6ed5674e8556685a",
+        "version": "1.6.0"
+      }
+    },
+    {
+      "identity": "swift-crypto",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/apple/swift-crypto.git",
+      "state": {
+        "revision": "47d3869a7291f085c1fb9fb1e6d3b97a793f45c6",
+        "version": "4.5.1"
+      }
+    },
+    {
+      "identity": "swift-huggingface",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/huggingface/swift-huggingface.git",
+      "state": {
+        "revision": "b721959445b617d0bf03910b2b4aced345fd93bf",
+        "version": "0.9.0"
+      }
+    },
+    {
+      "identity": "swift-jinja",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/huggingface/swift-jinja.git",
+      "state": {
+        "revision": "7d0b8880ef8e567dd4e0089f8b99fb354129017c",
+        "version": "2.4.2"
+      }
+    },
+    {
+      "identity": "swift-nio",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/apple/swift-nio.git",
+      "state": {
+        "revision": "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+        "version": "2.101.3"
+      }
+    },
+    {
+      "identity": "swift-numerics",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/apple/swift-numerics",
+      "state": {
+        "revision": "0c0290ff6b24942dadb83a929ffaaa1481df04a2",
+        "version": "1.1.1"
+      }
+    },
+    {
+      "identity": "swift-syntax",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/swiftlang/swift-syntax.git",
+      "state": {
+        "revision": "79e4b74a295b6eb74a8b585e3a39d29e70c1dbd1",
+        "version": "603.0.2"
+      }
+    },
+    {
+      "identity": "swift-system",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/apple/swift-system.git",
+      "state": {
+        "revision": "869129b7bf4ecc57b97d0193ad29690ca2134750",
+        "version": "1.8.1"
+      }
+    },
+    {
+      "identity": "swift-transformers",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/huggingface/swift-transformers.git",
+      "state": {
+        "revision": "2fa33e1f5e7131a7fc64c28e6d161dcec0d24820",
+        "version": "1.3.3"
+      }
+    },
+    {
+      "identity": "yyjson",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/ibireme/yyjson.git",
+      "state": {
+        "revision": "8b4a38dc994a110abaec8a400615567bd996105f",
+        "version": "0.12.0"
+      }
+    }
+  ]
+}

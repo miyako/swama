@@ -1,0 +1,84 @@
+name: Update native resources
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_update:
+        description: 'Commit the complete verified pinned native resource set to main'
+        type: boolean
+        default: false
+      publish_component:
+        description: 'After a successful Git update, explicitly dispatch component Publish'
+        type: boolean
+        default: false
+      mode:
+        description: 'Component version increment (only used when Publish is explicitly requested)'
+        type: choice
+        default: patch
+        options: [patch, minor, major]
+
+permissions:
+  contents: read
+
+# Serialize updates with component publication; neither may overwrite concurrent main work.
+concurrency:
+  group: swama-component-publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main' && github.event.repository.default_branch == 'main'
+    uses: ./.github/workflows/native-build.yml
+
+  update:
+    if: inputs.commit_update && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: macos-26
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    outputs:
+      revision: ${{ steps.update.outputs.revision }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Require unchanged dispatch base before downloading
+        run: python3 native/update.py freshness --expected "$GITHUB_SHA"
+      - uses: actions/download-artifact@v4
+        with:
+          name: swama-native-macos-arm64
+          path: .native-build/download
+      - name: Verify and commit exact complete native resources
+        id: update
+        run: |
+          cd .native-build/download
+          shasum -a 256 --check ./*.sha256
+          cd ../..
+          python3 native/update.py adopt .native-build/download/*.tar.gz --expected "$GITHUB_SHA"
+          python3 native/update.py verify
+      - name: Explain Git update and publication boundary
+        run: |
+          echo 'Complete pinned native resources committed with a normal fast-forward push. No LFS or force push.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'A GITHUB_TOKEN push does not trigger other push workflows. Publish is dispatched only with the separate publish_component opt-in.' >> "$GITHUB_STEP_SUMMARY"
+
+  dispatch:
+    if: inputs.commit_update && inputs.publish_component && github.ref == 'refs/heads/main'
+    needs: update
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Dispatch only if the verified update is still main HEAD
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EXPECTED_REVISION: ${{ needs.update.outputs.revision }}
+          RELEASE_MODE: ${{ inputs.mode }}
+        run: |
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$EXPECTED_REVISION"
+          gh workflow run publish.yml --ref main -f mode="$RELEASE_MODE" -f use_self_hosted=false
