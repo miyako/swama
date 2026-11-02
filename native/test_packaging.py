@@ -6,12 +6,32 @@ import tarfile
 import unittest
 from unittest.mock import patch
 
-from build import audit_binary, copy_products, inventory
+from build import audit_binary, checkout_source, copy_products, inventory, run
 from install import install
 from smoke import verify
 
 
 class PackagingTests(unittest.TestCase):
+    def test_fresh_clone_and_cached_checkout_preserve_pin_and_reject_dirty_sources(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            origin = root / "origin"
+            run("git", "init", "--quiet", origin)
+            source_file = origin / "fixture.txt"
+            source_file.write_text("source fixture\n")
+            run("git", "add", "fixture.txt", cwd=origin)
+            run(
+                "git", "-c", "user.name=CI fixture", "-c", "user.email=fixture@example.invalid",
+                "commit", "--quiet", "-m", "Create source fixture", cwd=origin,
+            )
+            revision = run("git", "rev-parse", "HEAD", cwd=origin, capture=True)
+            checkout = root / "checkout"
+            self.assertEqual(checkout_source(checkout, str(origin), revision), revision)
+            self.assertEqual(checkout_source(checkout, str(origin), revision), revision)
+            (checkout / "fixture.txt").write_text("unexpected edit\n")
+            with self.assertRaisesRegex(RuntimeError, "tracked modifications"):
+                checkout_source(checkout, str(origin), revision)
+
     def test_binary_audit_requires_colocated_non_system_runtime(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

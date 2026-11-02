@@ -36,6 +36,18 @@ def inventory(directory):
     }
 
 
+def checkout_source(source, repository, ref):
+    if not source.exists():
+        run("git", "clone", repository, source)
+    if run("git", "remote", "get-url", "origin", cwd=source, capture=True) != repository:
+        raise RuntimeError("Build checkout origin does not match the pinned upstream repository")
+    if run("git", "status", "--porcelain", "--untracked-files=no", cwd=source, capture=True):
+        raise RuntimeError("Build checkout has tracked modifications")
+    run("git", "fetch", "--depth", "1", "origin", ref, cwd=source)
+    run("git", "checkout", "--detach", "FETCH_HEAD", cwd=source)
+    return run("git", "rev-parse", "HEAD", cwd=source, capture=True)
+
+
 def audit_binary(binary):
     architectures = run("lipo", "-archs", binary, capture=True).split()
     if "arm64" not in architectures or (binary.name == "swama" and architectures != ["arm64"]):
@@ -171,15 +183,7 @@ def main():
         parser.error(f"Output already exists; choose a fresh directory: {output}")
     work.mkdir(parents=True, exist_ok=True)
     source = work / "upstream"
-    if not source.exists():
-        run("git", "clone", "--no-checkout", pin["repository"], source)
-    if run("git", "remote", "get-url", "origin", cwd=source, capture=True) != pin["repository"]:
-        raise RuntimeError("Build checkout origin does not match the pinned upstream repository")
-    if run("git", "status", "--porcelain", "--untracked-files=no", cwd=source, capture=True):
-        raise RuntimeError("Build checkout has tracked modifications")
-    run("git", "fetch", "--depth", "1", "origin", ref, cwd=source)
-    run("git", "checkout", "--detach", "FETCH_HEAD", cwd=source)
-    revision = run("git", "rev-parse", "HEAD", cwd=source, capture=True)
+    revision = checkout_source(source, pin["repository"], ref)
     version = (source / "VERSION").read_text().strip()
     if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?", version):
         raise RuntimeError(f"Invalid upstream version: {version}")
