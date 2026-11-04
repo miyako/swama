@@ -55,6 +55,10 @@ $swama:=cs.swama.swama.new($port; $huggingfaces; $homeFolder; $options; $event)
 
 <aside class="callout"><strong>Registration is not readiness.</strong><p>The current component's success callback does not guarantee HTTP readiness or successful inference. Check errors and wait for <code>/v1/models</code> before sending a request. Re-registering an existing model directory can fail; inspect registration output rather than treating an existing folder as a new successful download.</p></aside>
 
+The `event` argument is optional; without it, startup still proceeds but no callbacks are delivered. Each instance requests at most one launch and delivers `onSuccess` at most once. The server's stdout and stderr are deliberately not forwarded to `event.onStdOut`/`onStdErr`, because a long-running server can produce large amounts of output; only `onTerminate` is bound.
+
+If no Hugging Face entry resolves to a file to download (for example a mistyped repository, or a file name that is not in the repository) and the repository is reachable, the component starts only when `options.model` is an existing local model `4D.Folder` (or `4D.File`). Otherwise it calls `onError` with code `2`, naming the path if one was given, and does not launch. When Hugging Face is unreachable, the configured local folder is used as before.
+
 In a terminal, confirm the listener is available:
 
 ```sh
@@ -125,7 +129,7 @@ Only use that default-port pattern when the default server is already running; c
 
 </div>
 
-These are upstream CLI settings. The 4D constructor also configures its own home folder, downloaded model and worker options; do not assume those paths equal the CLI defaults. Use explicit `host: "127.0.0.1"` in the component options or `--host 127.0.0.1` with the CLI.
+These are upstream CLI settings. The 4D constructor also configures its own home folder, downloaded model and worker options; do not assume those paths equal the CLI defaults. Use explicit `host: "127.0.0.1"` in the component options or `--host 127.0.0.1` with the CLI. Real-number component options are passed to the CLI with a `.` decimal separator regardless of the system locale.
 
 For all current server options, run `./swama serve --help` or read the [upstream README at the pinned revision](https://github.com/Trans-N-ai/swama/blob/545894b3e9bda3a18453bf46fbff9e2f55f6f363/README.md).
 
